@@ -1,0 +1,7 @@
+[project]
+name = "parasight"
+version = "0.1.0"
+description = "ParaSight, an AI driven, vision first UI test runner that latches onto your app’s front end and refuses to break, out‑adapting Selenium and Playwright at every DOM twist."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
