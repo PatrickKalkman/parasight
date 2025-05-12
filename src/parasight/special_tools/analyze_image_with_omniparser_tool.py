@@ -6,44 +6,49 @@ from agents import function_tool
 from parasight.helpers.omni_parser_client import OmniParserClient
 
 
+from typing import Any, Dict, Literal, Optional # Added Optional
+
+from agents import function_tool
+
+from parasight.helpers.omni_parser_client import OmniParserClient
+
+
 @function_tool
 async def analyze_image_with_omniparser(
-    image_path: str = None,
-    image_base64: str = None,
-    source_type: Literal["file_path", "base64"] = "file_path",
+    image_path: Optional[str] = None, # Made optional
+    image_base64: Optional[str] = None, # Made optional
+    # source_type is no longer needed as input, determined by which arg is provided
     box_threshold: float = 0.05,
     iou_threshold: float = 0.1,
-) -> Dict[str, Any]:
+) -> Dict[str, Any]: # Keep Dict return for now, ideally Pydantic
     """
-    Analyze an image using the OmniParser service.
-
+    Analyze an image using the OmniParser service. Provide either image_path or image_base64.
 
     Args:
-        image_source: Source of the image (file path, base64 string, or screenshot result)
-        source_type: Type of the image source ("file_path", "base64", or "screenshot_result")
-        box_threshold: Threshold for box detection
-        iou_threshold: IOU threshold for box detection
+        image_path: Path to the image file.
+        image_base64: Base64 encoded string of the image.
+        box_threshold: Threshold for box detection.
+        iou_threshold: IOU threshold for box detection.
 
     Returns:
-        Analysis results from OmniParser
+        Analysis results from OmniParser (as a dictionary).
     """
+    image_data: Optional[bytes] = None
     try:
-        # Get image data based on source type
-        if source_type == "file_path":
-            with open(image_source, "rb") as f:
+        # Determine image data source
+        if image_path and image_base64:
+             return {"success": False, "error": "Provide either image_path or image_base64, not both."}
+        elif image_path:
+            with open(image_path, "rb") as f:
                 image_data = f.read()
-        elif source_type == "base64":
-            image_data = base64.b64decode(image_source)
-        elif source_type == "screenshot_result":
-            # Assuming image_source is a dictionary with image_base64 field
-            if isinstance(image_source, dict) and "image_base64" in image_source:
-                image_data = base64.b64decode(image_source["image_base64"])
-            else:
-                return {"success": False, "error": "Invalid screenshot result format"}
+        elif image_base64:
+            image_data = base64.b64decode(image_base64)
         else:
-            return {"success": False, "error": f"Unsupported source type: {source_type}"}
+             return {"success": False, "error": "Must provide either image_path or image_base64."}
 
-        omniparser_client = OmniParserClient(base_url="http://192.168.1.28:7860")
+        # Removed screenshot_result logic
+
+        omniparser_client = OmniParserClient(base_url="http://192.168.1.28:7860") # TODO: Make base_url configurable
         result = await omniparser_client.process_image(
             image_data=image_data, box_threshold=box_threshold, iou_threshold=iou_threshold
         )

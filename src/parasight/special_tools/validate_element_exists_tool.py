@@ -2,9 +2,10 @@ from typing import Any, Dict
 
 from agents import function_tool
 
+# Import Pydantic models used by the tools
 from parasight.special_tools.analyze_image_with_omniparser_tool import analyze_image_with_omniparser
-from parasight.special_tools.find_elements_tool import find_elements_by_description
-from parasight.special_tools.take_screenshot_tool import take_screenshot
+from parasight.special_tools.find_elements_tool import find_elements_by_description, FindElementsResultOutput
+from parasight.special_tools.take_screenshot_tool import take_screenshot, ScreenshotResultOutput
 
 
 @function_tool
@@ -20,34 +21,44 @@ async def validate_element_exists(url: str, element_description: str, wait_time:
     Returns:
         Validation result with element details if found
     """
-    # Take a screenshot
-    screenshot_result = await take_screenshot(url=url, wait_time=wait_time, output_format="base64")
+    # Take a screenshot (returns ScreenshotResultOutput model)
+    screenshot_result: ScreenshotResultOutput = await take_screenshot(url=url, wait_time=wait_time, output_format="base64")
 
-    if not screenshot_result.get("success", False):
-        return {"success": False, "error": screenshot_result.get("error", "Failed to take screenshot")}
+    if not screenshot_result.success:
+        return {"success": False, "error": screenshot_result.error or "Failed to take screenshot"}
 
-    # Analyze the screenshot with OmniParser
+    if not screenshot_result.image_base64:
+         return {"success": False, "error": "Screenshot taken but no base64 image data found"}
+
+    # Analyze the screenshot with OmniParser (returns Dict for now, ideally should be Pydantic too)
+    # Pass base64 data directly
     analysis_result = await analyze_image_with_omniparser(
-        image_source=screenshot_result, source_type="screenshot_result"
+        image_base64=screenshot_result.image_base64, source_type="base64"
     )
 
     if not analysis_result.get("success", False):
         return {"success": False, "error": analysis_result.get("error", "Failed to analyze image")}
 
-    # Find matching elements
-    find_result = find_elements_by_description(parsed_data=analysis_result, description=element_description)
+    # Find matching elements (returns FindElementsResultOutput model)
+    # TODO: analysis_result should ideally be converted to OmniParserResultInput model first
+    # For now, we assume the dict structure matches the Pydantic model expected by find_elements
+    find_result: FindElementsResultOutput = find_elements_by_description(
+        parsed_data=analysis_result, description=element_description
+    )
 
-    if not find_result.get("success", False):
-        return {"success": False, "error": find_result.get("error", "Failed to find elements")}
+    if not find_result.success:
+        return {"success": False, "error": find_result.error or "Failed to find elements"}
 
     # Check if any matching elements were found
-    matches_found = find_result.get("matches_found", 0)
+    matches_found = find_result.matches_found or 0
     if matches_found > 0:
         return {
             "success": True,
             "element_exists": True,
             "matches_found": matches_found,
-            "matching_elements": find_result.get("matching_elements", []),
+            # Convert Pydantic models to dicts for the final JSON-like output if needed,
+            # or define a Pydantic model for this tool's output as well.
+            "matching_elements": [elem.model_dump() for elem in find_result.matching_elements] if find_result.matching_elements else [],
         }
     else:
         return {
