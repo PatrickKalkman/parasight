@@ -10,9 +10,9 @@ from playwright.async_api import async_playwright
 async def take_screenshot(
     url: str,
     output_format: Literal["base64", "file"],
-    output_file: Optional[str],
-    browser_type: Literal["chromium", "firefox", "webkit"],
-    wait_time: int,
+    output_file: Optional[str] = None,
+    browser_type: Literal["chromium", "firefox", "webkit"] = "chromium",
+    wait_time: int = 1000,
 ) -> Dict[str, Any]:
     """
     Navigate to a URL and take a screenshot using Playwright.
