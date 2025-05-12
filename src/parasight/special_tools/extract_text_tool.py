@@ -14,19 +14,17 @@ class OmniParserElement(BaseModel):
     center_x: Optional[float] = Field(None)
     center_y: Optional[float] = Field(None)
     element_type: Optional[str] = "unknown"
-    # Allow other fields from the parser without failing validation
-    model_config = ConfigDict(extra='allow') # Allow extra fields
+    # model_config = ConfigDict(extra='allow') # Removed to enforce strict schema
 
 class OmniParserData(BaseModel):
     parsed_content_list: List[OmniParserElement] = []
-    model_config = ConfigDict(extra='allow') # Allow extra fields
+    # model_config = ConfigDict(extra='allow') # Removed to enforce strict schema
 
 class OmniParserResultInput(BaseModel): # Input model
     success: bool
     data: Optional[OmniParserData] = None
     error: Optional[str] = None
-    # Allow other fields potentially returned by the upstream tool
-    model_config = ConfigDict(extra='allow') # Allow extra fields
+    # model_config = ConfigDict(extra='allow') # Removed to enforce strict schema
 
 class ExtractedElementOutput(BaseModel): # Output model for one element
     text: str
