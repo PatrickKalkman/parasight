@@ -12,7 +12,8 @@ from parasight.special_tools.validate_element_exists_tool import validate_elemen
 async def test_tools():
     print("=== Testing take_screenshot ===")
     # Returns ScreenshotResultOutput model
-    screenshot_result = await take_screenshot(
+    # Call the underlying function using .func
+    screenshot_result = await take_screenshot.func(
         url="https://titan-management.streamingbuzz.com", output_format="file", output_file="example_screenshot.png"
     )
     # Use model_dump_json for Pydantic models
@@ -21,7 +22,8 @@ async def test_tools():
 
     print("=== Testing analyze_image_with_omniparser ===")
     # Call with image_path
-    analysis_result = await analyze_image_with_omniparser(
+    # Call the underlying function using .func
+    analysis_result = await analyze_image_with_omniparser.func(
         image_path="example_screenshot.png" # Use image_path argument
     )
     # analysis_result is still a Dict
@@ -36,7 +38,8 @@ async def test_tools():
     # find_elements expects OmniParserResultInput model, but analysis_result is Dict.
     # This might fail if the dict structure doesn't perfectly match the model.
     # Ideally, convert analysis_result dict to OmniParserResultInput model here.
-    find_result = find_elements_by_description(parsed_data=analysis_result, description="Example Domain")
+    # Call the underlying function using .func
+    find_result = find_elements_by_description.func(parsed_data=analysis_result, description="Example Domain")
     # Use model_dump_json for Pydantic models
     print(f"Find result: {find_result.model_dump_json(indent=2)}")
     print()
@@ -45,13 +48,15 @@ async def test_tools():
     # extract_text_from_elements expects OmniParserResultInput model, but analysis_result is Dict.
     # This might fail if the dict structure doesn't perfectly match the model.
     # Ideally, convert analysis_result dict to OmniParserResultInput model here.
-    extract_result = extract_text_from_elements(parsed_data=analysis_result)
+    # Call the underlying function using .func
+    extract_result = extract_text_from_elements.func(parsed_data=analysis_result)
     # Use model_dump_json for Pydantic models
     print(f"Extract result: {extract_result.model_dump_json(indent=2)}")
     print()
 
     print("=== Testing validate_element_exists ===")
-    validate_result = await validate_element_exists(
+    # Call the underlying function using .func
+    validate_result = await validate_element_exists.func(
         url="https://titan-management.streamingbuzz.com", element_description="Example Domain"
     )
     print(f"Validation result: {json.dumps(validate_result, indent=2)}")
