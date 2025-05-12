@@ -21,8 +21,8 @@ class ScreenshotResultOutput(BaseModel):
 # --- End Pydantic Model ---
 
 
-@function_tool
-async def take_screenshot(
+# Core logic function (without decorator)
+async def _take_screenshot_core(
     url: str,
     output_format: Literal["base64", "file"],
     output_file: Optional[str] = None,
@@ -94,3 +94,7 @@ async def take_screenshot(
             return ScreenshotResultOutput(success=False, error=str(e), url=url)
         finally:
             await browser.close()
+
+
+# Apply the function_tool decorator to the core logic function
+take_screenshot = function_tool(_take_screenshot_core)
