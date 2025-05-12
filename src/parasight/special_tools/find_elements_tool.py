@@ -1,16 +1,35 @@
-from typing import Any, Dict, Literal
+from typing import Any, Dict, Literal, List, Optional # Added List, Optional
 
 from agents import function_tool
+from pydantic import BaseModel, Field
+
+# Import models from extract_text_tool
+from .extract_text_tool import OmniParserResultInput, OmniParserElement, Position
+
+
+# --- Pydantic Models for find_elements_by_description output ---
+class MatchingElementOutput(BaseModel):
+    element: OmniParserElement # Re-use OmniParserElement
+    position: Position         # Re-use Position
+    text: str
+    element_type: str
+
+class FindElementsResultOutput(BaseModel):
+    success: bool
+    matches_found: Optional[int] = None
+    matching_elements: Optional[List[MatchingElementOutput]] = None
+    error: Optional[str] = None
+# --- End Pydantic Models ---
 
 
 @function_tool
 def find_elements_by_description(
-    parsed_data: Dict[str, Any],
+    parsed_data: OmniParserResultInput, # Use OmniParserResultInput
     description: str,
     match_type: Literal["contains", "exact", "startswith", "endswith"] = "contains",
     case_sensitive: bool = False,
     max_results: int = 5,
-) -> Dict[str, Any]:
+) -> FindElementsResultOutput: # Use FindElementsResultOutput
     """
     Find elements in OmniParser results that match a description.
 
@@ -22,22 +41,21 @@ def find_elements_by_description(
         max_results: Maximum number of matching elements to return
 
     Returns:
-        Dictionary with matching elements
+        Pydantic model instance with matching elements
     """
-    if not parsed_data.get("success", False):
-        return {"success": False, "error": parsed_data.get("error", "Invalid parsed data")}
+    if not parsed_data.success:
+        return FindElementsResultOutput(success=False, error=parsed_data.error or "Invalid parsed data")
 
-    parsed_content_list = parsed_data.get("data", {}).get("parsed_content_list", [])
-    if not parsed_content_list:
-        return {"success": False, "error": "No elements found in parsed data"}
+    if not parsed_data.data or not parsed_data.data.parsed_content_list:
+        return FindElementsResultOutput(success=False, error="No elements found in parsed data")
 
-    matching_elements = []
+    output_matching_elements: List[MatchingElementOutput] = []
 
     # Adjust description based on case sensitivity
     search_description = description if case_sensitive else description.lower()
 
-    for element in parsed_content_list:
-        element_text = element.get("text", "")
+    for element_model in parsed_data.data.parsed_content_list: # Iterate over OmniParserElement models
+        element_text = element_model.text or ""
 
         # Adjust element text based on case sensitivity
         search_text = element_text if case_sensitive else element_text.lower()
@@ -53,14 +71,20 @@ def find_elements_by_description(
             is_match = search_text.endswith(search_description)
 
         if is_match:
-            matching_elements.append({
-                "element": element,
-                "position": {"x": element.get("center_x"), "y": element.get("center_y")},
-                "text": element_text,
-                "element_type": element.get("element_type", "unknown"),
-            })
+            output_matching_elements.append(
+                MatchingElementOutput(
+                    element=element_model, # Pass the Pydantic model instance
+                    position=Position(x=element_model.center_x, y=element_model.center_y),
+                    text=element_text,
+                    element_type=element_model.element_type or "unknown",
+                )
+            )
 
-            if len(matching_elements) >= max_results:
+            if len(output_matching_elements) >= max_results:
                 break
 
-    return {"success": True, "matches_found": len(matching_elements), "matching_elements": matching_elements}
+    return FindElementsResultOutput(
+        success=True,
+        matches_found=len(output_matching_elements),
+        matching_elements=output_matching_elements
+    )
