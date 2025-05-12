@@ -2,10 +2,11 @@ from typing import Any, Dict
 
 from agents import function_tool
 
+from parasight.special_tools.analyze_image_with_omniparser_tool import _analyze_image_with_omniparser_core
+
 # Import Pydantic models used by the tools
-from parasight.special_tools.analyze_image_with_omniparser_tool import analyze_image_with_omniparser
-from parasight.special_tools.find_elements_tool import FindElementsResultOutput, find_elements_by_description
-from parasight.special_tools.take_screenshot_tool import ScreenshotResultOutput, take_screenshot
+from parasight.special_tools.find_elements_tool import FindElementsResultOutput, _find_elements_by_description_core
+from parasight.special_tools.take_screenshot_tool import ScreenshotResultOutput, _take_screenshot_core
 
 
 # Core logic function (without decorator)
@@ -22,7 +23,7 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
         Validation result with element details if found
     """
     # Take a screenshot (returns ScreenshotResultOutput model)
-    screenshot_result: ScreenshotResultOutput = await take_screenshot(
+    screenshot_result: ScreenshotResultOutput = await _take_screenshot_core(
         url=url, wait_time=wait_time, output_format="base64"
     )
 
@@ -34,7 +35,7 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
 
     # Analyze the screenshot with OmniParser (returns Dict for now, ideally should be Pydantic too)
     # Pass base64 data directly
-    analysis_result = await analyze_image_with_omniparser(
+    analysis_result = await _analyze_image_with_omniparser_core(
         image_base64=screenshot_result.image_base64, source_type="base64"
     )
 
@@ -44,7 +45,7 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
     # Find matching elements (returns FindElementsResultOutput model)
     # TODO: analysis_result should ideally be converted to OmniParserResultInput model first
     # For now, we assume the dict structure matches the Pydantic model expected by find_elements
-    find_result: FindElementsResultOutput = find_elements_by_description(
+    find_result: FindElementsResultOutput = _find_elements_by_description_core(
         parsed_data=analysis_result, description=element_description
     )
 
