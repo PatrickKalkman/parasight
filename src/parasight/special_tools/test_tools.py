@@ -1,64 +1,72 @@
 import asyncio
 import json
 
-# Import the tools defined above
-from parasight.special_tools.analyze_image_with_omniparser_tool import analyze_image_with_omniparser
-from parasight.special_tools.extract_text_tool import extract_text_from_elements
-from parasight.special_tools.find_elements_tool import find_elements_by_description
-from parasight.special_tools.take_screenshot_tool import take_screenshot
-from parasight.special_tools.validate_element_exists_tool import validate_element_exists
+# Import the core functions and necessary models
+from parasight.special_tools.analyze_image_with_omniparser_tool import _analyze_image_with_omniparser_core
+from parasight.special_tools.extract_text_tool import (
+    OmniParserResultInput,  # Import the input model
+    _extract_text_from_elements_core,
+)
+from parasight.special_tools.find_elements_tool import _find_elements_by_description_core
+from parasight.special_tools.take_screenshot_tool import _take_screenshot_core
+from parasight.special_tools.validate_element_exists_tool import _validate_element_exists_core
 
 
 async def test_tools():
-    print("=== Testing take_screenshot ===")
+    print("=== Testing _take_screenshot_core ===")
     # Returns ScreenshotResultOutput model
-    # Call the underlying function using .func
-    screenshot_result = await take_screenshot.func(
+    # Call the core function directly
+    screenshot_result = await _take_screenshot_core(
         url="https://titan-management.streamingbuzz.com", output_format="file", output_file="example_screenshot.png"
     )
     # Use model_dump_json for Pydantic models
     print(f"Screenshot result: {screenshot_result.model_dump_json(indent=2)}")
     print()
 
-    print("=== Testing analyze_image_with_omniparser ===")
+    print("=== Testing _analyze_image_with_omniparser_core ===")
     # Call with image_path
-    # Call the underlying function using .func
-    analysis_result = await analyze_image_with_omniparser.func(
-        image_path="example_screenshot.png" # Use image_path argument
+    # Call the core function directly
+    analysis_result: dict = await _analyze_image_with_omniparser_core(
+        image_path="example_screenshot.png"  # Use image_path argument
     )
-    # analysis_result is still a Dict
+    # analysis_result is a Dict
     print(f"Analysis result status: {analysis_result.get('success')}")
     # Safely access nested keys
     data = analysis_result.get("data", {}) if isinstance(analysis_result, dict) else {}
     content_list = data.get("parsed_content_list", []) if isinstance(data, dict) else []
     print(f"Number of elements: {len(content_list)}")
+
+    # Convert the analysis_result dict to the Pydantic model expected by downstream tools
+    # This assumes the dict structure from analyze_image matches OmniParserResultInput
+    try:
+        parsed_data_input = OmniParserResultInput(**analysis_result)
+    except Exception as e:
+        print(f"Error converting analysis_result to OmniParserResultInput: {e}")
+        # Handle error appropriately, maybe skip subsequent tests
+        return
+
     print()
 
-    print("=== Testing find_elements_by_description ===")
-    # find_elements expects OmniParserResultInput model, but analysis_result is Dict.
-    # This might fail if the dict structure doesn't perfectly match the model.
-    # Ideally, convert analysis_result dict to OmniParserResultInput model here.
-    # Call the underlying function using .func
-    find_result = find_elements_by_description.func(parsed_data=analysis_result, description="Example Domain")
+    print("=== Testing _find_elements_by_description_core ===")
+    # Call the core function directly, passing the Pydantic model instance
+    find_result = _find_elements_by_description_core(parsed_data=parsed_data_input, description="Example Domain")
     # Use model_dump_json for Pydantic models
     print(f"Find result: {find_result.model_dump_json(indent=2)}")
     print()
 
-    print("=== Testing extract_text_from_elements ===")
-    # extract_text_from_elements expects OmniParserResultInput model, but analysis_result is Dict.
-    # This might fail if the dict structure doesn't perfectly match the model.
-    # Ideally, convert analysis_result dict to OmniParserResultInput model here.
-    # Call the underlying function using .func
-    extract_result = extract_text_from_elements.func(parsed_data=analysis_result)
+    print("=== Testing _extract_text_from_elements_core ===")
+    # Call the core function directly, passing the Pydantic model instance
+    extract_result = _extract_text_from_elements_core(parsed_data=parsed_data_input)
     # Use model_dump_json for Pydantic models
     print(f"Extract result: {extract_result.model_dump_json(indent=2)}")
     print()
 
-    print("=== Testing validate_element_exists ===")
-    # Call the underlying function using .func
-    validate_result = await validate_element_exists.func(
+    print("=== Testing _validate_element_exists_core ===")
+    # Call the core function directly
+    validate_result = await _validate_element_exists_core(
         url="https://titan-management.streamingbuzz.com", element_description="Example Domain"
     )
+    # validate_result is a Dict
     print(f"Validation result: {json.dumps(validate_result, indent=2)}")
     print()
 
