@@ -5,8 +5,8 @@ from agents import function_tool
 from playwright.async_api import async_playwright
 
 
-@function_tool
-async def interact_with_element(
+# Core logic function (without decorator)
+async def _interact_with_element_core(
     element: Dict[str, Any],
     action: Literal["click", "hover", "type", "scroll_to_view"],
     browser_state: Dict[str, Any],
@@ -88,3 +88,7 @@ async def interact_with_element(
 
         finally:
             await browser.close()
+
+
+# Apply the function_tool decorator to the core logic function
+interact_with_element = function_tool(_interact_with_element_core)

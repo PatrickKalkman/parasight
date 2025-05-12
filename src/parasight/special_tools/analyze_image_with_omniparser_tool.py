@@ -10,8 +10,8 @@ from agents import function_tool
 from parasight.helpers.omni_parser_client import OmniParserClient
 
 
-@function_tool
-async def analyze_image_with_omniparser(
+# Core logic function (without decorator)
+async def _analyze_image_with_omniparser_core(
     image_path: Optional[str] = None,  # Made optional
     image_base64: Optional[str] = None,  # Made optional
     # source_type is no longer needed as input, determined by which arg is provided
@@ -53,3 +53,7 @@ async def analyze_image_with_omniparser(
         return result
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+# Apply the function_tool decorator to the core logic function
+analyze_image_with_omniparser = function_tool(_analyze_image_with_omniparser_core)

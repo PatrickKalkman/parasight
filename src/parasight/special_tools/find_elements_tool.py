@@ -25,8 +25,8 @@ class FindElementsResultOutput(BaseModel):
 # --- End Pydantic Models ---
 
 
-@function_tool
-def find_elements_by_description(
+# Core logic function (without decorator)
+def _find_elements_by_description_core(
     parsed_data: OmniParserResultInput,  # Use OmniParserResultInput
     description: str,
     match_type: Literal["contains", "exact", "startswith", "endswith"] = "contains",
@@ -89,3 +89,7 @@ def find_elements_by_description(
     return FindElementsResultOutput(
         success=True, matches_found=len(output_matching_elements), matching_elements=output_matching_elements
     )
+
+
+# Apply the function_tool decorator to the core logic function
+find_elements_by_description = function_tool(_find_elements_by_description_core)

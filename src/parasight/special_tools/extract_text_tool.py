@@ -46,8 +46,8 @@ class ExtractedTextResultOutput(BaseModel):  # Final output model
 # --- End Pydantic Models ---
 
 
-@function_tool
-def extract_text_from_elements(
+# Core logic function (without decorator)
+def _extract_text_from_elements_core(
     parsed_data: OmniParserResultInput, element_type: Optional[str] = None
 ) -> ExtractedTextResultOutput:
     """
@@ -90,3 +90,7 @@ def extract_text_from_elements(
     return ExtractedTextResultOutput(
         success=True, element_count=len(extracted_elements_output), extracted_text=extracted_elements_output
     )
+
+
+# Apply the function_tool decorator to the core logic function
+extract_text_from_elements = function_tool(_extract_text_from_elements_core)

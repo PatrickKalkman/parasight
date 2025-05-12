@@ -8,8 +8,8 @@ from parasight.special_tools.find_elements_tool import FindElementsResultOutput,
 from parasight.special_tools.take_screenshot_tool import ScreenshotResultOutput, take_screenshot
 
 
-@function_tool
-async def validate_element_exists(url: str, element_description: str, wait_time: int = 1000) -> Dict[str, Any]:
+# Core logic function (without decorator)
+async def _validate_element_exists_core(url: str, element_description: str, wait_time: int = 1000) -> Dict[str, Any]:
     """
     Navigate to a URL and validate if an element exists on the page.
 
@@ -70,3 +70,7 @@ async def validate_element_exists(url: str, element_description: str, wait_time:
             "element_exists": False,
             "error": f"No elements matching '{element_description}' found on the page",
         }
+
+
+# Apply the function_tool decorator to the core logic function
+validate_element_exists = function_tool(_validate_element_exists_core)
