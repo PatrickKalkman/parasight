@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 from agents import function_tool
 
 
-@function_tool
+@function_tool(strict=False)
 def extract_text_from_elements(parsed_data: Dict[str, Any], element_type: Optional[str] = None) -> Dict[str, Any]:
     """
     Extract text from elements in OmniParser results, optionally filtered by type.
