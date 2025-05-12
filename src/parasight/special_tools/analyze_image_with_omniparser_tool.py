@@ -1,12 +1,9 @@
 import base64
-from typing import Any, Dict, Literal
-
-from agents import function_tool
-
-from parasight.helpers.omni_parser_client import OmniParserClient
-
-
-from typing import Any, Dict, Literal, Optional # Added Optional
+from typing import (
+    Any,
+    Dict,
+    Optional,  # Added Optional
+)
 
 from agents import function_tool
 
@@ -15,12 +12,12 @@ from parasight.helpers.omni_parser_client import OmniParserClient
 
 @function_tool
 async def analyze_image_with_omniparser(
-    image_path: Optional[str] = None, # Made optional
-    image_base64: Optional[str] = None, # Made optional
+    image_path: Optional[str] = None,  # Made optional
+    image_base64: Optional[str] = None,  # Made optional
     # source_type is no longer needed as input, determined by which arg is provided
     box_threshold: float = 0.05,
     iou_threshold: float = 0.1,
-) -> Dict[str, Any]: # Keep Dict return for now, ideally Pydantic
+) -> Dict[str, Any]:  # Keep Dict return for now, ideally Pydantic
     """
     Analyze an image using the OmniParser service. Provide either image_path or image_base64.
 
@@ -37,18 +34,18 @@ async def analyze_image_with_omniparser(
     try:
         # Determine image data source
         if image_path and image_base64:
-             return {"success": False, "error": "Provide either image_path or image_base64, not both."}
+            return {"success": False, "error": "Provide either image_path or image_base64, not both."}
         elif image_path:
             with open(image_path, "rb") as f:
                 image_data = f.read()
         elif image_base64:
             image_data = base64.b64decode(image_base64)
         else:
-             return {"success": False, "error": "Must provide either image_path or image_base64."}
+            return {"success": False, "error": "Must provide either image_path or image_base64."}
 
         # Removed screenshot_result logic
 
-        omniparser_client = OmniParserClient(base_url="http://192.168.1.28:7860") # TODO: Make base_url configurable
+        omniparser_client = OmniParserClient(base_url="http://192.168.1.28:7860")  # TODO: Make base_url configurable
         result = await omniparser_client.process_image(
             image_data=image_data, box_threshold=box_threshold, iou_threshold=iou_threshold
         )

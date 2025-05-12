@@ -4,8 +4,8 @@ from agents import function_tool
 
 # Import Pydantic models used by the tools
 from parasight.special_tools.analyze_image_with_omniparser_tool import analyze_image_with_omniparser
-from parasight.special_tools.find_elements_tool import find_elements_by_description, FindElementsResultOutput
-from parasight.special_tools.take_screenshot_tool import take_screenshot, ScreenshotResultOutput
+from parasight.special_tools.find_elements_tool import FindElementsResultOutput, find_elements_by_description
+from parasight.special_tools.take_screenshot_tool import ScreenshotResultOutput, take_screenshot
 
 
 @function_tool
@@ -22,13 +22,15 @@ async def validate_element_exists(url: str, element_description: str, wait_time:
         Validation result with element details if found
     """
     # Take a screenshot (returns ScreenshotResultOutput model)
-    screenshot_result: ScreenshotResultOutput = await take_screenshot(url=url, wait_time=wait_time, output_format="base64")
+    screenshot_result: ScreenshotResultOutput = await take_screenshot(
+        url=url, wait_time=wait_time, output_format="base64"
+    )
 
     if not screenshot_result.success:
         return {"success": False, "error": screenshot_result.error or "Failed to take screenshot"}
 
     if not screenshot_result.image_base64:
-         return {"success": False, "error": "Screenshot taken but no base64 image data found"}
+        return {"success": False, "error": "Screenshot taken but no base64 image data found"}
 
     # Analyze the screenshot with OmniParser (returns Dict for now, ideally should be Pydantic too)
     # Pass base64 data directly
@@ -58,7 +60,9 @@ async def validate_element_exists(url: str, element_description: str, wait_time:
             "matches_found": matches_found,
             # Convert Pydantic models to dicts for the final JSON-like output if needed,
             # or define a Pydantic model for this tool's output as well.
-            "matching_elements": [elem.model_dump() for elem in find_result.matching_elements] if find_result.matching_elements else [],
+            "matching_elements": [elem.model_dump() for elem in find_result.matching_elements]
+            if find_result.matching_elements
+            else [],
         }
     else:
         return {

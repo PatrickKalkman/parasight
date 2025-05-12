@@ -1,35 +1,38 @@
-from typing import Any, Dict, Literal, List, Optional # Added List, Optional
+from typing import List, Literal, Optional  # Added List, Optional
 
 from agents import function_tool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 # Import models from extract_text_tool
-from .extract_text_tool import OmniParserResultInput, OmniParserElement, Position
+from .extract_text_tool import OmniParserElement, OmniParserResultInput, Position
 
 
 # --- Pydantic Models for find_elements_by_description output ---
 class MatchingElementOutput(BaseModel):
-    element: OmniParserElement # Re-use OmniParserElement
-    position: Position         # Re-use Position
+    element: OmniParserElement  # Re-use OmniParserElement
+    position: Position  # Re-use Position
     text: str
     element_type: str
+
 
 class FindElementsResultOutput(BaseModel):
     success: bool
     matches_found: Optional[int] = None
     matching_elements: Optional[List[MatchingElementOutput]] = None
     error: Optional[str] = None
+
+
 # --- End Pydantic Models ---
 
 
 @function_tool
 def find_elements_by_description(
-    parsed_data: OmniParserResultInput, # Use OmniParserResultInput
+    parsed_data: OmniParserResultInput,  # Use OmniParserResultInput
     description: str,
     match_type: Literal["contains", "exact", "startswith", "endswith"] = "contains",
     case_sensitive: bool = False,
     max_results: int = 5,
-) -> FindElementsResultOutput: # Use FindElementsResultOutput
+) -> FindElementsResultOutput:  # Use FindElementsResultOutput
     """
     Find elements in OmniParser results that match a description.
 
@@ -54,7 +57,7 @@ def find_elements_by_description(
     # Adjust description based on case sensitivity
     search_description = description if case_sensitive else description.lower()
 
-    for element_model in parsed_data.data.parsed_content_list: # Iterate over OmniParserElement models
+    for element_model in parsed_data.data.parsed_content_list:  # Iterate over OmniParserElement models
         element_text = element_model.text or ""
 
         # Adjust element text based on case sensitivity
@@ -73,7 +76,7 @@ def find_elements_by_description(
         if is_match:
             output_matching_elements.append(
                 MatchingElementOutput(
-                    element=element_model, # Pass the Pydantic model instance
+                    element=element_model,  # Pass the Pydantic model instance
                     position=Position(x=element_model.center_x, y=element_model.center_y),
                     text=element_text,
                     element_type=element_model.element_type or "unknown",
@@ -84,7 +87,5 @@ def find_elements_by_description(
                 break
 
     return FindElementsResultOutput(
-        success=True,
-        matches_found=len(output_matching_elements),
-        matching_elements=output_matching_elements
+        success=True, matches_found=len(output_matching_elements), matching_elements=output_matching_elements
     )

@@ -1,13 +1,14 @@
-from typing import Any, Dict, Optional, List # Add List
+from typing import List, Optional  # Add List
 
 from agents import function_tool
-from pydantic import BaseModel, Field, ConfigDict # Import Pydantic components
+from pydantic import BaseModel, Field  # Import Pydantic components
 
 
 # --- Pydantic Models ---
 class Position(BaseModel):
     x: Optional[float] = None
     y: Optional[float] = None
+
 
 class OmniParserElement(BaseModel):
     text: Optional[str] = ""
@@ -16,31 +17,39 @@ class OmniParserElement(BaseModel):
     element_type: Optional[str] = "unknown"
     # model_config = ConfigDict(extra='allow') # Removed to enforce strict schema
 
+
 class OmniParserData(BaseModel):
     parsed_content_list: List[OmniParserElement] = []
     # model_config = ConfigDict(extra='allow') # Removed to enforce strict schema
 
-class OmniParserResultInput(BaseModel): # Input model
+
+class OmniParserResultInput(BaseModel):  # Input model
     success: bool
     data: Optional[OmniParserData] = None
     error: Optional[str] = None
     # model_config = ConfigDict(extra='allow') # Removed to enforce strict schema
 
-class ExtractedElementOutput(BaseModel): # Output model for one element
+
+class ExtractedElementOutput(BaseModel):  # Output model for one element
     text: str
     position: Position
     element_type: str
 
-class ExtractedTextResultOutput(BaseModel): # Final output model
+
+class ExtractedTextResultOutput(BaseModel):  # Final output model
     success: bool
     element_count: Optional[int] = None
     extracted_text: Optional[List[ExtractedElementOutput]] = None
     error: Optional[str] = None
+
+
 # --- End Pydantic Models ---
 
 
 @function_tool
-def extract_text_from_elements(parsed_data: OmniParserResultInput, element_type: Optional[str] = None) -> ExtractedTextResultOutput:
+def extract_text_from_elements(
+    parsed_data: OmniParserResultInput, element_type: Optional[str] = None
+) -> ExtractedTextResultOutput:
     """
     Extract text from elements in OmniParser results, optionally filtered by type.
 
@@ -79,7 +88,5 @@ def extract_text_from_elements(parsed_data: OmniParserResultInput, element_type:
             )
 
     return ExtractedTextResultOutput(
-        success=True,
-        element_count=len(extracted_elements_output),
-        extracted_text=extracted_elements_output
+        success=True, element_count=len(extracted_elements_output), extracted_text=extracted_elements_output
     )

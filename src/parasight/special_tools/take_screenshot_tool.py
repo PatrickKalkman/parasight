@@ -1,23 +1,23 @@
 import base64
 import os
-import base64
-import os
-from typing import Any, Dict, Literal, Optional
+from typing import Literal, Optional
 
 from agents import function_tool
 from playwright.async_api import async_playwright
-from pydantic import BaseModel # Import BaseModel
+from pydantic import BaseModel  # Import BaseModel
 
 
 # --- Pydantic Model for take_screenshot output ---
 class ScreenshotResultOutput(BaseModel):
     success: bool
-    file_path: Optional[str] = None       # Only for file output
-    image_base64: Optional[str] = None    # Only for base64 output
+    file_path: Optional[str] = None  # Only for file output
+    image_base64: Optional[str] = None  # Only for base64 output
     url: Optional[str] = None
     browser_type: Optional[str] = None
-    content_type: Optional[str] = None    # Only for base64 output
+    content_type: Optional[str] = None  # Only for base64 output
     error: Optional[str] = None
+
+
 # --- End Pydantic Model ---
 
 
@@ -28,7 +28,7 @@ async def take_screenshot(
     output_file: Optional[str] = None,
     browser_type: Literal["chromium", "firefox", "webkit"] = "chromium",
     wait_time: int = 1000,
-) -> ScreenshotResultOutput: # Use Pydantic model for return type
+) -> ScreenshotResultOutput:  # Use Pydantic model for return type
     """
     Navigate to a URL and take a screenshot using Playwright.
 
