@@ -1,10 +1,48 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List # Add List
 
 from agents import function_tool
+from pydantic import BaseModel, Field, ConfigDict # Import Pydantic components
+
+
+# --- Pydantic Models ---
+class Position(BaseModel):
+    x: Optional[float] = None
+    y: Optional[float] = None
+
+class OmniParserElement(BaseModel):
+    text: Optional[str] = ""
+    center_x: Optional[float] = Field(None)
+    center_y: Optional[float] = Field(None)
+    element_type: Optional[str] = "unknown"
+    # Allow other fields from the parser without failing validation
+    model_config = ConfigDict(extra='allow') # Allow extra fields
+
+class OmniParserData(BaseModel):
+    parsed_content_list: List[OmniParserElement] = []
+    model_config = ConfigDict(extra='allow') # Allow extra fields
+
+class OmniParserResultInput(BaseModel): # Input model
+    success: bool
+    data: Optional[OmniParserData] = None
+    error: Optional[str] = None
+    # Allow other fields potentially returned by the upstream tool
+    model_config = ConfigDict(extra='allow') # Allow extra fields
+
+class ExtractedElementOutput(BaseModel): # Output model for one element
+    text: str
+    position: Position
+    element_type: str
+
+class ExtractedTextResultOutput(BaseModel): # Final output model
+    success: bool
+    element_count: Optional[int] = None
+    extracted_text: Optional[List[ExtractedElementOutput]] = None
+    error: Optional[str] = None
+# --- End Pydantic Models ---
 
 
 @function_tool
-def extract_text_from_elements(parsed_data: Dict[str, Any], element_type: Optional[str] = None) -> Dict[str, Any]:
+def extract_text_from_elements(parsed_data: OmniParserResultInput, element_type: Optional[str] = None) -> ExtractedTextResultOutput:
     """
     Extract text from elements in OmniParser results, optionally filtered by type.
 
@@ -13,28 +51,37 @@ def extract_text_from_elements(parsed_data: Dict[str, Any], element_type: Option
         element_type: Optional filter for element type
 
     Returns:
-        Dictionary with extracted text from elements
+        Pydantic model instance with extracted text from elements
     """
-    if not parsed_data.get("success", False):
-        return {"success": False, "error": parsed_data.get("error", "Invalid parsed data")}
+    # Pydantic automatically validates/converts the input dict to OmniParserResultInput
+    if not parsed_data.success:
+        # Return model instance even on failure
+        return ExtractedTextResultOutput(success=False, error=parsed_data.error or "Invalid parsed data")
 
-    parsed_content_list = parsed_data.get("data", {}).get("parsed_content_list", [])
-    if not parsed_content_list:
-        return {"success": False, "error": "No elements found in parsed data"}
+    if not parsed_data.data or not parsed_data.data.parsed_content_list:
+        return ExtractedTextResultOutput(success=False, error="No elements found in parsed data")
 
-    extracted_text = []
+    extracted_elements_output: List[ExtractedElementOutput] = []
 
-    for element in parsed_content_list:
+    for element in parsed_data.data.parsed_content_list:
         # Skip elements that don't match the requested type
-        if element_type and element.get("element_type") != element_type:
+        if element_type and element.element_type != element_type:
             continue
 
-        text = element.get("text", "").strip()
+        text = (element.text or "").strip()
         if text:
-            extracted_text.append({
-                "text": text,
-                "position": {"x": element.get("center_x"), "y": element.get("center_y")},
-                "element_type": element.get("element_type", "unknown"),
-            })
+            # Ensure element_type is not None before passing to model
+            element_type_str = element.element_type or "unknown"
+            extracted_elements_output.append(
+                ExtractedElementOutput(
+                    text=text,
+                    position=Position(x=element.center_x, y=element.center_y),
+                    element_type=element_type_str,
+                )
+            )
 
-    return {"success": True, "element_count": len(extracted_text), "extracted_text": extracted_text}
+    return ExtractedTextResultOutput(
+        success=True,
+        element_count=len(extracted_elements_output),
+        extracted_text=extracted_elements_output
+    )
