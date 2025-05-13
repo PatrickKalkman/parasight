@@ -21,6 +21,7 @@ class OmniParserElement(BaseModel):
 class OmniParserData(BaseModel):
     image: str
     parsed_content_list: str
+    label_coordinates: str  # Added field for coordinates string
     # model_config = ConfigDict(extra='allow') # Removed to enforce strict schema
 
 
