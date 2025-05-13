@@ -22,14 +22,18 @@ dotenv_path = os.path.join(project_root, '.env')
 # Try to load from .env file
 load_dotenv(dotenv_path)
 
-# Check if OPENAI_API_KEY is set
+# Check if OPENAI_API_KEY is set and valid
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
-    print(f"Warning: OPENAI_API_KEY not found in {dotenv_path}")
+    print(f"Error: OPENAI_API_KEY not found in {dotenv_path}")
     print("Please set your OPENAI_API_KEY in the .env file or as an environment variable")
-    print("Example .env file content: OPENAI_API_KEY=your-api-key-here")
-    # Uncomment the line below to exit if no API key is found
-    # raise ValueError("OPENAI_API_KEY not found. Please set it in your .env file or environment.")
+    print("Example .env file content: OPENAI_API_KEY=sk-your-api-key-here")
+    raise ValueError("OPENAI_API_KEY not found. Please set it in your .env file or environment.")
+elif not api_key.startswith('sk-'):
+    print(f"Error: Invalid OPENAI_API_KEY format in {dotenv_path}")
+    print("OpenAI API keys should start with 'sk-' followed by alphanumeric characters")
+    print("Get your API key from https://platform.openai.com/api-keys")
+    raise ValueError("Invalid OPENAI_API_KEY format. Please check your API key.")
 else:
     print(f"OPENAI_API_KEY loaded successfully from {dotenv_path}")
 
