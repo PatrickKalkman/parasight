@@ -1,7 +1,6 @@
 from typing import List, Literal, Optional  # Added List, Optional
 
 from agents import function_tool
-import re  # Import re for parsing
 from pydantic import BaseModel
 
 # Import models and helpers from extract_text_tool
@@ -56,11 +55,7 @@ def _find_elements_by_description_core(
     if not parsed_data.success:
         return FindElementsResultOutput(success=False, error=parsed_data.error or "Invalid parsed data")
 
-    if (
-        not parsed_data.data
-        or not parsed_data.data.parsed_content_list
-        or not parsed_data.data.label_coordinates
-    ):
+    if not parsed_data.data or not parsed_data.data.parsed_content_list or not parsed_data.data.label_coordinates:
         return FindElementsResultOutput(success=False, error="Missing parsed content or coordinates in OmniParser data")
 
     # Parse coordinates
@@ -68,7 +63,7 @@ def _find_elements_by_description_core(
     # Warning or error if coordinates couldn't be parsed? For now, proceed without positions if necessary.
 
     output_matching_elements: List[MatchingElementOutput] = []
-    lines = parsed_data.data.parsed_content_list.strip().split('\n')
+    lines = parsed_data.data.parsed_content_list.strip().split("\n")
 
     # Adjust description based on case sensitivity
     search_description = description if case_sensitive else description.lower()
@@ -76,7 +71,7 @@ def _find_elements_by_description_core(
     for line in lines:
         parsed_line = _parse_element_line(line)
         if not parsed_line:
-            continue # Skip lines that don't match the expected format
+            continue  # Skip lines that don't match the expected format
 
         element_type_parsed, element_id_parsed, text_parsed = parsed_line
 
@@ -111,7 +106,7 @@ def _find_elements_by_description_core(
                 MatchingElementOutput(
                     element=element_data,
                     position=Position(x=center_x, y=center_y),
-                    text=text_parsed, # Use the original case text
+                    text=text_parsed,  # Use the original case text
                     element_type=element_type_parsed,
                 )
             )
