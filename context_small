@@ -1,5 +1,0 @@
-/drop
-/add       src/parasight/special_tools/extract_text_tool.py
-/add       src/parasight/special_tools/test_tools.py
-/add       src/parasight/special_tools/validate_element_exists_tool.py
-/read-only /Users/patrickkalkman/aider/CONVENTIONS.md

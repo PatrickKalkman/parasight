@@ -186,6 +186,5 @@ async def _interact_with_element_core(
         return InteractionOutputModel(success=False, error="No result returned from interaction")
 
 
-# Apply the function_tool decorator to both functions
 interact_with_element = function_tool(_interact_with_element_core)
 interact_with_element_sequence = function_tool(_interact_with_element_sequence_core)
