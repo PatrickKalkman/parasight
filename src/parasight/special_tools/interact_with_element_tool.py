@@ -1,18 +1,47 @@
 import base64
-from typing import Any, Dict, Literal, Optional
+from typing import Literal, Optional
 
 from agents import function_tool
 from playwright.async_api import async_playwright
+from pydantic import BaseModel
+
+
+# Pydantic Models for input and output structures
+class PositionModel(BaseModel):
+    x: float
+    y: float
+
+
+class ElementInputModel(BaseModel):
+    position: PositionModel
+
+
+class BrowserStateInputModel(BaseModel):
+    url: str
+
+
+class InteractionSuccessResultModel(BaseModel):
+    action_performed: Literal["click", "hover", "type", "scroll_to_view"]
+    position: PositionModel
+    text: Optional[str] = None
+    screenshot_after_action: str
+    current_url: str
+
+
+class InteractionOutputModel(BaseModel):
+    success: bool
+    result: Optional[InteractionSuccessResultModel] = None
+    error: Optional[str] = None
 
 
 # Core logic function (without decorator)
 async def _interact_with_element_core(
-    element: Dict[str, Any],
+    element: ElementInputModel,
     action: Literal["click", "hover", "type", "scroll_to_view"],
-    browser_state: Dict[str, Any],
+    browser_state: BrowserStateInputModel,
     text_to_type: Optional[str] = None,
     wait_after_action: int = 500,
-) -> Dict[str, Any]:
+) -> InteractionOutputModel:
     """
     Interact with an element on the page using Playwright.
 
@@ -32,43 +61,41 @@ async def _interact_with_element_core(
 
         try:
             # Navigate to the URL from browser state
-            url = browser_state.get("url")
-            if not url:
-                return {"success": False, "error": "No URL provided in browser state"}
+            if not browser_state.url: # Should not happen if model validation is on
+                return InteractionOutputModel(success=False, error="No URL provided in browser state")
 
-            await page.goto(url, wait_until="networkidle")
+            await page.goto(browser_state.url, wait_until="networkidle")
 
             # Get element position
-            position = element.get("position", {})
-            x, y = position.get("x"), position.get("y")
-
-            if not (x is not None and y is not None):
-                return {"success": False, "error": "Element position not provided"}
+            x, y = element.position.x, element.position.y
 
             # Perform the requested action
+            result_data: dict = {}
             if action == "click":
                 await page.mouse.click(x, y)
-                result = {"action_performed": "click", "position": {"x": x, "y": y}}
+                result_data = {"action_performed": "click", "position": {"x": x, "y": y}}
 
             elif action == "hover":
                 await page.mouse.move(x, y)
-                result = {"action_performed": "hover", "position": {"x": x, "y": y}}
+                result_data = {"action_performed": "hover", "position": {"x": x, "y": y}}
 
             elif action == "type":
                 if not text_to_type:
-                    return {"success": False, "error": "No text provided for type action"}
+                    return InteractionOutputModel(success=False, error="No text provided for type action")
 
                 await page.mouse.click(x, y)
                 await page.keyboard.type(text_to_type)
-                result = {"action_performed": "type", "position": {"x": x, "y": y}, "text": text_to_type}
+                result_data = {"action_performed": "type", "position": {"x": x, "y": y}, "text": text_to_type}
 
             elif action == "scroll_to_view":
                 # Use JavaScript to scroll the element into view
+                # Note: Playwright's element.scroll_into_view_if_needed() is usually preferred
+                # if we have an ElementHandle. Here, we only have coordinates.
                 await page.evaluate(f"window.scrollTo({x}, {y})")
-                result = {"action_performed": "scroll_to_view", "position": {"x": x, "y": y}}
-
+                result_data = {"action_performed": "scroll_to_view", "position": {"x": x, "y": y}}
             else:
-                return {"success": False, "error": f"Unsupported action: {action}"}
+                # This case should ideally be caught by Literal type validation earlier
+                return InteractionOutputModel(success=False, error=f"Unsupported action: {action}")
 
             # Wait after action if specified
             if wait_after_action > 0:
@@ -76,15 +103,19 @@ async def _interact_with_element_core(
 
             # Take a screenshot after the action
             screenshot_bytes = await page.screenshot()
-            result["screenshot_after_action"] = base64.b64encode(screenshot_bytes).decode("utf-8")
+            result_data["screenshot_after_action"] = base64.b64encode(screenshot_bytes).decode("utf-8")
 
             # Get the current URL (might have changed after action)
-            result["current_url"] = page.url
+            result_data["current_url"] = page.url
 
-            return {"success": True, "result": result}
+            # Ensure position in result_data is a PositionModel instance or dict
+            result_data["position"] = PositionModel(x=x, y=y)
+
+            success_payload = InteractionSuccessResultModel(**result_data)
+            return InteractionOutputModel(success=True, result=success_payload)
 
         except Exception as e:
-            return {"success": False, "error": str(e)}
+            return InteractionOutputModel(success=False, error=str(e))
 
         finally:
             await browser.close()

@@ -8,7 +8,12 @@ from parasight.special_tools.extract_text_tool import (
     OmniParserResultInput,  # Import the input model
     _extract_text_from_elements_core,
 )
-from parasight.special_tools.interact_with_element_tool import _interact_with_element_core
+from parasight.special_tools.interact_with_element_tool import (
+    _interact_with_element_core,
+    BrowserStateInputModel,
+    ElementInputModel,
+    PositionModel,
+)
 from parasight.special_tools.take_screenshot_tool import _take_screenshot_core
 from parasight.special_tools.validate_element_exists_tool import _validate_element_exists_core
 
@@ -74,7 +79,24 @@ async def test_tools():
     print(f"Validation result: {json.dumps(validate_result, indent=2)}")
     print()
 
-    _interact_with_element_core(validate_result, "type", "bladiebla")
+    # Test _interact_with_element_core
+    # Create sample inputs for the interaction tool
+    # Note: In a real scenario, element position might come from a previous step like find_elements
+    sample_element_position = PositionModel(x=50, y=100)  # Example coordinates
+    sample_element_input = ElementInputModel(position=sample_element_position)
+    sample_browser_state_input = BrowserStateInputModel(url="http://192.168.1.28:3000/")
+
+    print("=== Testing _interact_with_element_core ===")
+    interaction_result = await _interact_with_element_core(
+        element=sample_element_input,
+        action="type",  # Example action
+        browser_state=sample_browser_state_input,
+        text_to_type="Hello from test",  # Example text
+        wait_after_action=500,
+    )
+    # interaction_result is an InteractionOutputModel instance
+    print(f"Interaction result: {interaction_result.model_dump_json(indent=2)}")
+    print()
 
 
 if __name__ == "__main__":
