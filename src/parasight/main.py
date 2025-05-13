@@ -18,9 +18,20 @@ from parasight.special_tools.validate_element_exists_tool import validate_elemen
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
 dotenv_path = os.path.join(project_root, '.env')
+
+# Try to load from .env file
 load_dotenv(dotenv_path)
-print(f"Loading .env from: {dotenv_path}")
-print(f"OPENAI_API_KEY: {os.getenv('OPENAI_API_KEY')}")
+
+# Check if OPENAI_API_KEY is set
+api_key = os.getenv('OPENAI_API_KEY')
+if not api_key:
+    print(f"Warning: OPENAI_API_KEY not found in {dotenv_path}")
+    print("Please set your OPENAI_API_KEY in the .env file or as an environment variable")
+    print("Example .env file content: OPENAI_API_KEY=your-api-key-here")
+    # Uncomment the line below to exit if no API key is found
+    # raise ValueError("OPENAI_API_KEY not found. Please set it in your .env file or environment.")
+else:
+    print(f"OPENAI_API_KEY loaded successfully from {dotenv_path}")
 
 
 UITEST_TOOLS = [
