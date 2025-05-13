@@ -19,7 +19,8 @@ class OmniParserElement(BaseModel):
 
 
 class OmniParserData(BaseModel):
-    parsed_content_list: List[OmniParserElement] = []
+    image: str
+    parsed_content_list: str
     # model_config = ConfigDict(extra='allow') # Removed to enforce strict schema
 
 
