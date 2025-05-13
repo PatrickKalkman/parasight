@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 
 # Import the core functions and necessary models
@@ -7,7 +8,7 @@ from parasight.special_tools.extract_text_tool import (
     OmniParserResultInput,  # Import the input model
     _extract_text_from_elements_core,
 )
-from parasight.special_tools.find_elements_tool import _find_elements_by_description_core
+from parasight.special_tools.interact_with_element_tool import _interact_with_element_core
 from parasight.special_tools.take_screenshot_tool import _take_screenshot_core
 from parasight.special_tools.validate_element_exists_tool import _validate_element_exists_core
 
@@ -17,7 +18,7 @@ async def test_tools():
     # Returns ScreenshotResultOutput model
     # Call the core function directly
     screenshot_result = await _take_screenshot_core(
-        url="https://titan-management.streamingbuzz.com", output_format="file", output_file="example_screenshot.png"
+        url="http://192.168.1.28:3000/", output_format="file", output_file="example_screenshot.png"
     )
     # Use model_dump_json for Pydantic models
     print(f"Screenshot result: {screenshot_result.model_dump_json(indent=2)}")
@@ -34,7 +35,15 @@ async def test_tools():
     # Safely access nested keys
     data = analysis_result.get("data", {}) if isinstance(analysis_result, dict) else {}
     content_list = data.get("parsed_content_list", []) if isinstance(data, dict) else []
+    annotated_image = data.get("image", "") if isinstance(data, dict) else ""
     print(f"Number of elements: {len(content_list)}")
+
+    # decode the base64 annotated image and save it to a file
+    if annotated_image:
+        with open("annotated_image.png", "wb") as f:
+            f.write(base64.b64decode(annotated_image))
+
+    print(content_list)
 
     # Convert the analysis_result dict to the Pydantic model expected by downstream tools
     # This assumes the dict structure from analyze_image matches OmniParserResultInput
@@ -45,14 +54,9 @@ async def test_tools():
         # Handle error appropriately, maybe skip subsequent tests
         return
 
-    print()
-
     print("=== Testing _find_elements_by_description_core ===")
     # Call the core function directly, passing the Pydantic model instance
-    find_result = _find_elements_by_description_core(parsed_data=parsed_data_input, description="Example Domain")
-    # Use model_dump_json for Pydantic models
-    print(f"Find result: {find_result.model_dump_json(indent=2)}")
-    print()
+    # find_result = _find_elements_by_description_core(parsed_data=parsed_data_input, description="Example Domain")
 
     print("=== Testing _extract_text_from_elements_core ===")
     # Call the core function directly, passing the Pydantic model instance
@@ -64,11 +68,13 @@ async def test_tools():
     print("=== Testing _validate_element_exists_core ===")
     # Call the core function directly
     validate_result = await _validate_element_exists_core(
-        url="https://titan-management.streamingbuzz.com", element_description="Example Domain"
+        url="http://192.168.1.28:3000/", element_description="Username"
     )
     # validate_result is a Dict
     print(f"Validation result: {json.dumps(validate_result, indent=2)}")
     print()
+
+    _interact_with_element_core(validate_result, "type", "bladiebla")
 
 
 if __name__ == "__main__":
