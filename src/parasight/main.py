@@ -14,7 +14,9 @@ from parasight.special_tools.interact_with_element_tool import interact_with_ele
 from parasight.special_tools.take_screenshot_tool import take_screenshot
 from parasight.special_tools.validate_element_exists_tool import validate_element_exists
 
-load_dotenv()
+# Construct the path to the .env file in the project root
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
+load_dotenv(dotenv_path=dotenv_path)
 print(os.getenv("OPENAI_API_KEY"))
 
 
