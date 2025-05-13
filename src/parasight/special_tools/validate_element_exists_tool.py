@@ -36,7 +36,7 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
     # Analyze the screenshot with OmniParser (returns Dict for now, ideally should be Pydantic too)
     # Pass base64 data directly
     analysis_result = await _analyze_image_with_omniparser_core(
-        image_base64=screenshot_result.image_base64, source_type="base64"
+        image_base64=screenshot_result.image_base64  # Removed source_type argument
     )
 
     if not analysis_result.get("success", False):
