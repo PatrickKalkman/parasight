@@ -5,6 +5,7 @@ from agents import function_tool
 from parasight.special_tools.analyze_image_with_omniparser_tool import _analyze_image_with_omniparser_core
 
 # Import Pydantic models used by the tools
+from parasight.special_tools.extract_text_tool import OmniParserResultInput  # Import the input model
 from parasight.special_tools.find_elements_tool import FindElementsResultOutput, _find_elements_by_description_core
 from parasight.special_tools.take_screenshot_tool import ScreenshotResultOutput, _take_screenshot_core
 
@@ -42,11 +43,16 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
     if not analysis_result.get("success", False):
         return {"success": False, "error": analysis_result.get("error", "Failed to analyze image")}
 
+    # Convert the analysis_result dict to the Pydantic model
+    try:
+        parsed_data_input = OmniParserResultInput(**analysis_result)
+    except Exception as e:
+        # Handle potential validation errors during model creation
+        return {"success": False, "error": f"Failed to parse analysis result: {e}"}
+
     # Find matching elements (returns FindElementsResultOutput model)
-    # TODO: analysis_result should ideally be converted to OmniParserResultInput model first
-    # For now, we assume the dict structure matches the Pydantic model expected by find_elements
     find_result: FindElementsResultOutput = _find_elements_by_description_core(
-        parsed_data=analysis_result, description=element_description
+        parsed_data=parsed_data_input, description=element_description
     )
 
     if not find_result.success:
