@@ -1,10 +1,17 @@
 from typing import List, Literal, Optional  # Added List, Optional
 
 from agents import function_tool
+import re  # Import re for parsing
 from pydantic import BaseModel
 
-# Import models from extract_text_tool
-from .extract_text_tool import OmniParserElement, OmniParserResultInput, Position
+# Import models and helpers from extract_text_tool
+from .extract_text_tool import (
+    OmniParserElement,
+    OmniParserResultInput,
+    Position,
+    _parse_coordinates,
+    _parse_element_line,
+)
 
 
 # --- Pydantic Models for find_elements_by_description output ---
@@ -49,19 +56,32 @@ def _find_elements_by_description_core(
     if not parsed_data.success:
         return FindElementsResultOutput(success=False, error=parsed_data.error or "Invalid parsed data")
 
-    if not parsed_data.data or not parsed_data.data.parsed_content_list:
-        return FindElementsResultOutput(success=False, error="No elements found in parsed data")
+    if (
+        not parsed_data.data
+        or not parsed_data.data.parsed_content_list
+        or not parsed_data.data.label_coordinates
+    ):
+        return FindElementsResultOutput(success=False, error="Missing parsed content or coordinates in OmniParser data")
+
+    # Parse coordinates
+    coordinates = _parse_coordinates(parsed_data.data.label_coordinates)
+    # Warning or error if coordinates couldn't be parsed? For now, proceed without positions if necessary.
 
     output_matching_elements: List[MatchingElementOutput] = []
+    lines = parsed_data.data.parsed_content_list.strip().split('\n')
 
     # Adjust description based on case sensitivity
     search_description = description if case_sensitive else description.lower()
 
-    for element_model in parsed_data.data.parsed_content_list:  # Iterate over OmniParserElement models
-        element_text = element_model.text or ""
+    for line in lines:
+        parsed_line = _parse_element_line(line)
+        if not parsed_line:
+            continue # Skip lines that don't match the expected format
+
+        element_type_parsed, element_id_parsed, text_parsed = parsed_line
 
         # Adjust element text based on case sensitivity
-        search_text = element_text if case_sensitive else element_text.lower()
+        search_text = text_parsed if case_sensitive else text_parsed.lower()
 
         is_match = False
         if match_type == "contains":
@@ -74,12 +94,25 @@ def _find_elements_by_description_core(
             is_match = search_text.endswith(search_description)
 
         if is_match:
+            # Get coordinates using the parsed ID
+            coords = coordinates.get(element_id_parsed)
+            center_x, center_y = (coords[0], coords[1]) if coords and len(coords) >= 2 else (None, None)
+
+            # Create a simple OmniParserElement for the output
+            # Note: We don't have the full element details here, just text, type, and position
+            element_data = OmniParserElement(
+                text=text_parsed,
+                center_x=center_x,
+                center_y=center_y,
+                element_type=element_type_parsed,
+            )
+
             output_matching_elements.append(
                 MatchingElementOutput(
-                    element=element_model,  # Pass the Pydantic model instance
-                    position=Position(x=element_model.center_x, y=element_model.center_y),
-                    text=element_text,
-                    element_type=element_model.element_type or "unknown",
+                    element=element_data,
+                    position=Position(x=center_x, y=center_y),
+                    text=text_parsed, # Use the original case text
+                    element_type=element_type_parsed,
                 )
             )
 
