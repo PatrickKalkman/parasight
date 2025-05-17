@@ -11,7 +11,7 @@ from parasight.special_tools.take_screenshot_tool import ScreenshotResultOutput,
 
 
 # Core logic function (without decorator)
-async def _validate_element_exists_core(url: str, element_description: str, wait_time: int = 1000) -> Dict[str, Any]:
+async def _validate_element_exists_core(url: str, element_description: str, wait_time: int) -> Dict[str, Any]:
     """
     Navigate to a URL and validate if an element exists on the page.
 
@@ -23,6 +23,9 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
     Returns:
         Validation result with element details if found
     """
+
+    wait_time = 1000
+
     # Take a screenshot (returns ScreenshotResultOutput model)
     screenshot_result: ScreenshotResultOutput = await _take_screenshot_core(
         url=url, wait_time=wait_time, output_format="base64"
