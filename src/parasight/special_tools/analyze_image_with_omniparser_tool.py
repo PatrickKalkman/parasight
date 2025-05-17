@@ -12,11 +12,10 @@ from parasight.helpers.omni_parser_client import OmniParserClient
 
 # Core logic function (without decorator)
 async def _analyze_image_with_omniparser_core(
-    image_path: Optional[str] = None,  # Made optional
-    image_base64: Optional[str] = None,  # Made optional
-    # source_type is no longer needed as input, determined by which arg is provided
-    box_threshold: float = 0.05,
-    iou_threshold: float = 0.1,
+    image_path: Optional[str],
+    image_base64: Optional[str],
+    box_threshold: float,
+    iou_threshold: float,
 ) -> Dict[str, Any]:  # Keep Dict return for now, ideally Pydantic
     """
     Analyze an image using the OmniParser service. Provide either image_path or image_base64.
@@ -30,6 +29,9 @@ async def _analyze_image_with_omniparser_core(
     Returns:
         Analysis results from OmniParser (as a dictionary).
     """
+    box_threshold = 0.05
+    iou_threshold = 0.1
+
     image_data: Optional[bytes] = None
     try:
         # Determine image data source
