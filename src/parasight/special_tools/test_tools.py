@@ -69,7 +69,7 @@ async def test_tools():
 
     print("=== Testing _analyze_image_with_omniparser_core ===")
     analysis_result: dict = await _analyze_image_with_omniparser_core(
-        image_path=screenshot_output_file, image_base64=None, box_threshold=0.05, iou_threshold=0.1
+        image_path=screenshot_output_file, box_threshold=0.05, iou_threshold=0.1
     )
     print(f"Analysis result status: {analysis_result.get('success')}")
 

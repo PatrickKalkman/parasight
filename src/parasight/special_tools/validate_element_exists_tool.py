@@ -39,7 +39,7 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
 
     # Analyze the screenshot with OmniParser using the file path
     analysis_result = await _analyze_image_with_omniparser_core(
-        image_path=screenshot_result.file_path, image_base64=None, box_threshold=0.05, iou_threshold=0.1
+        image_path=screenshot_result.file_path, box_threshold=0.05, iou_threshold=0.1
     )
 
     # TODO: Consider deleting the temporary screenshot file: os.remove(screenshot_result.file_path)
