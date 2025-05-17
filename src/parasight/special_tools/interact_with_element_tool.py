@@ -64,7 +64,7 @@ async def _interact_with_element_sequence_core(
     take_screenshots = True
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)  # Set to False for debugging
-        page = await browser.new_page()
+        page = await browser.new_page(viewport={"width": 1280, "height": 720})
 
         try:
             # Navigate to the initial URL from browser state
@@ -76,6 +76,14 @@ async def _interact_with_element_sequence_core(
 
             await page.goto(browser_state.url, wait_until="networkidle")
 
+            viewport_size = page.viewport_size
+            if not viewport_size:
+                results.append(
+                    InteractionOutputModel(success=False, error="Could not determine page viewport size.", result=None)
+                )
+                await browser.close() # Ensure browser is closed before returning
+                return results
+
             # Perform each interaction in sequence
             for i, interaction in enumerate(interactions):
                 element = interaction.element
@@ -83,19 +91,23 @@ async def _interact_with_element_sequence_core(
                 text_to_type = interaction.text_to_type
                 wait_after_action = interaction.wait_after_action
 
-                # Get element position
-                x, y = element.position.x, element.position.y
+                # Get element position (these are normalized)
+                normalized_x, normalized_y = element.position.x, element.position.y
+
+                # Scale to pixel coordinates
+                pixel_x = int(normalized_x * viewport_size['width'])
+                pixel_y = int(normalized_y * viewport_size['height'])
 
                 # Perform the requested action
                 result_data: dict = {}
                 try:
                     if action == "click":
-                        await page.mouse.click(x, y)
-                        result_data = {"action_performed": "click", "position": {"x": x, "y": y}}
+                        await page.mouse.click(pixel_x, pixel_y)
+                        result_data = {"action_performed": "click", "position": {"x": pixel_x, "y": pixel_y}}
 
                     elif action == "hover":
-                        await page.mouse.move(x, y)
-                        result_data = {"action_performed": "hover", "position": {"x": x, "y": y}}
+                        await page.mouse.move(pixel_x, pixel_y)
+                        result_data = {"action_performed": "hover", "position": {"x": pixel_x, "y": pixel_y}}
 
                     elif action == "type":
                         if not text_to_type:
@@ -108,14 +120,14 @@ async def _interact_with_element_sequence_core(
                             )
                             continue
 
-                        print(f"Step {i + 1}: Typing text: {text_to_type} at position ({x}, {y})")
-                        await page.mouse.click(x, y)
+                        print(f"Step {i + 1}: Typing text: {text_to_type} at position ({pixel_x}, {pixel_y})")
+                        await page.mouse.click(pixel_x, pixel_y) # Click at the target before typing
                         await page.keyboard.type(text_to_type)
-                        result_data = {"action_performed": "type", "position": {"x": x, "y": y}, "text": text_to_type}
+                        result_data = {"action_performed": "type", "position": {"x": pixel_x, "y": pixel_y}, "text": text_to_type}
 
                     elif action == "scroll_to_view":
-                        await page.evaluate(f"window.scrollTo({x}, {y})")
-                        result_data = {"action_performed": "scroll_to_view", "position": {"x": x, "y": y}}
+                        await page.evaluate(f"window.scrollTo({pixel_x}, {pixel_y})")
+                        result_data = {"action_performed": "scroll_to_view", "position": {"x": pixel_x, "y": pixel_y}}
 
                     else:
                         results.append(
@@ -146,7 +158,9 @@ async def _interact_with_element_sequence_core(
                     result_data["current_url"] = page.url
 
                     # Ensure position in result_data is a PositionModel instance or dict
-                    result_data["position"] = PositionModel(x=x, y=y)
+                    # The "position" key in result_data should already hold a dict like {"x": pixel_x, "y": pixel_y}
+                    # from the action-specific assignments. This explicit assignment ensures it's a PositionModel.
+                    result_data["position"] = PositionModel(x=pixel_x, y=pixel_y) # Use pixel_x, pixel_y
 
                     success_payload = InteractionSuccessResultModel(**result_data)
                     results.append(InteractionOutputModel(success=True, result=success_payload, error=None))
