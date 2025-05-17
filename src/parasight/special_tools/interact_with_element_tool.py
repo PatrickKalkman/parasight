@@ -69,7 +69,9 @@ async def _interact_with_element_sequence_core(
         try:
             # Navigate to the initial URL from browser state
             if not browser_state.url:
-                results.append(InteractionOutputModel(success=False, error="No URL provided in browser state", result=None))
+                results.append(
+                    InteractionOutputModel(success=False, error="No URL provided in browser state", result=None)
+                )
                 return results
 
             await page.goto(browser_state.url, wait_until="networkidle")
@@ -99,7 +101,9 @@ async def _interact_with_element_sequence_core(
                         if not text_to_type:
                             results.append(
                                 InteractionOutputModel(
-                                    success=False, error=f"No text provided for type action at step {i + 1}", result=None
+                                    success=False,
+                                    error=f"No text provided for type action at step {i + 1}",
+                                    result=None,
                                 )
                             )
                             continue
@@ -115,7 +119,9 @@ async def _interact_with_element_sequence_core(
 
                     else:
                         results.append(
-                            InteractionOutputModel(success=False, error=f"Unsupported action: {action} at step {i + 1}", result=None)
+                            InteractionOutputModel(
+                                success=False, error=f"Unsupported action: {action} at step {i + 1}", result=None
+                            )
                         )
                         continue
 
@@ -146,7 +152,9 @@ async def _interact_with_element_sequence_core(
                     results.append(InteractionOutputModel(success=True, result=success_payload, error=None))
 
                 except Exception as e:
-                    results.append(InteractionOutputModel(success=False, error=f"Error in step {i + 1}: {str(e)}", result=None))
+                    results.append(
+                        InteractionOutputModel(success=False, error=f"Error in step {i + 1}: {str(e)}", result=None)
+                    )
 
             return results
 
@@ -160,32 +168,4 @@ async def _interact_with_element_sequence_core(
             await browser.close()
 
 
-# Keep the original single-interaction function, modified to use the sequence function
-async def _interact_with_element_core(
-    element: ElementInputModel,
-    action: Literal["click", "hover", "type", "scroll_to_view"],
-    browser_state: BrowserStateInputModel,
-    text_to_type: Optional[str] = None,
-    wait_after_action: int = 500,
-) -> InteractionOutputModel:
-    """
-    Interact with a single element on the page using Playwright.
-
-    This function is a wrapper around _interact_with_element_sequence_core that
-    handles a single interaction for backward compatibility.
-    """
-    interaction = InteractionSequenceModel(
-        element=element, action=action, text_to_type=text_to_type, wait_after_action=wait_after_action
-    )
-
-    results = await _interact_with_element_sequence_core(interactions=[interaction], browser_state=browser_state)
-
-    # Return the first result (there should only be one)
-    if results:
-        return results[0]
-    else:
-        return InteractionOutputModel(success=False, error="No result returned from interaction", result=None)
-
-
-interact_with_element = function_tool(_interact_with_element_core)
 interact_with_element_sequence = function_tool(_interact_with_element_sequence_core)

@@ -50,7 +50,7 @@ agent = Agent(
         "2️⃣ Use OmniParser to read labels. "
         "3️⃣ Find username, password, Login button. "
         "4️⃣ Click/type in order via interact_with_element_sequence. "
-        "5️⃣ Declare PASS when redirected to dashboard, otherwise FAIL."
+        "5️⃣ Declare PASS when successfully logged in, otherwise FAIL."
     ),
     tools=UITEST_TOOLS,
     model="gpt-4o-mini",
@@ -64,7 +64,7 @@ async def main():
             agent,
             "Open http://192.168.1.28:3000 and run the login flow with "
             "username='demo' & password='password123'. "
-            "Return PASS if redirected to /dashboard, else FAIL.",
+            "Return PASS if the screen after login shows 'You have successfully logged in to your account', else FAIL.",
         )
         print(result.final_output)
     # result.full_output gives you every intermediate tool call if you want traces

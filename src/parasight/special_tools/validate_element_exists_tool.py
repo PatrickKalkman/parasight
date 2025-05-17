@@ -54,7 +54,7 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
 
     # Find matching elements (returns FindElementsResultOutput model)
     find_result: FindElementsResultOutput = _find_elements_by_description_core(
-        parsed_data=parsed_data_input, description=element_description
+        parsed_data=parsed_data_input, description=element_description, match_type="contains"
     )
 
     if not find_result.success:

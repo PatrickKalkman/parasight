@@ -1,6 +1,5 @@
-import base64
 import os
-from typing import Literal, Optional
+from typing import Optional
 
 from agents import function_tool
 from playwright.async_api import async_playwright
