@@ -69,7 +69,7 @@ async def _interact_with_element_sequence_core(
         try:
             # Navigate to the initial URL from browser state
             if not browser_state.url:
-                results.append(InteractionOutputModel(success=False, error="No URL provided in browser state"))
+                results.append(InteractionOutputModel(success=False, error="No URL provided in browser state", result=None))
                 return results
 
             await page.goto(browser_state.url, wait_until="networkidle")
@@ -99,7 +99,7 @@ async def _interact_with_element_sequence_core(
                         if not text_to_type:
                             results.append(
                                 InteractionOutputModel(
-                                    success=False, error=f"No text provided for type action at step {i + 1}"
+                                    success=False, error=f"No text provided for type action at step {i + 1}", result=None
                                 )
                             )
                             continue
@@ -115,7 +115,7 @@ async def _interact_with_element_sequence_core(
 
                     else:
                         results.append(
-                            InteractionOutputModel(success=False, error=f"Unsupported action: {action} at step {i + 1}")
+                            InteractionOutputModel(success=False, error=f"Unsupported action: {action} at step {i + 1}", result=None)
                         )
                         continue
 
@@ -146,14 +146,14 @@ async def _interact_with_element_sequence_core(
                     results.append(InteractionOutputModel(success=True, result=success_payload))
 
                 except Exception as e:
-                    results.append(InteractionOutputModel(success=False, error=f"Error in step {i + 1}: {str(e)}"))
+                    results.append(InteractionOutputModel(success=False, error=f"Error in step {i + 1}: {str(e)}", result=None))
 
             return results
 
         except Exception as e:
             # Global exception handler
             if not results:  # If error happened before any actions were performed
-                results.append(InteractionOutputModel(success=False, error=str(e)))
+                results.append(InteractionOutputModel(success=False, error=str(e), result=None))
             return results
 
         finally:
@@ -184,7 +184,7 @@ async def _interact_with_element_core(
     if results:
         return results[0]
     else:
-        return InteractionOutputModel(success=False, error="No result returned from interaction")
+        return InteractionOutputModel(success=False, error="No result returned from interaction", result=None)
 
 
 interact_with_element = function_tool(_interact_with_element_core)
