@@ -30,23 +30,23 @@ class InteractionSuccessResultModel(BaseModel):
 
 class InteractionOutputModel(BaseModel):
     success: bool
-    result: Optional[InteractionSuccessResultModel] = None
-    error: Optional[str] = None
+    result: Optional[InteractionSuccessResultModel]
+    error: Optional[str]
 
 
 # New model for sequence of interactions
 class InteractionSequenceModel(BaseModel):
     element: ElementInputModel
     action: Literal["click", "hover", "type", "scroll_to_view"]
-    text_to_type: Optional[str] = None
-    wait_after_action: int = 500
+    text_to_type: Optional[str]
+    wait_after_action: int
 
 
 # Updated core function to handle multiple interactions
 async def _interact_with_element_sequence_core(
     interactions: List[InteractionSequenceModel],
     browser_state: BrowserStateInputModel,
-    take_screenshots: bool = True,
+    take_screenshots: bool,
 ) -> List[InteractionOutputModel]:
     """
     Perform a sequence of interactions with elements on the page using a single Playwright session.
@@ -61,6 +61,7 @@ async def _interact_with_element_sequence_core(
     """
     results = []
 
+    take_screenshots = True
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)  # Set to False for debugging
         page = await browser.new_page()

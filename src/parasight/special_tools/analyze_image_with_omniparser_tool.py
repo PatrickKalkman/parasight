@@ -1,4 +1,3 @@
-import base64
 from typing import (
     Any,
     Dict,
@@ -36,7 +35,7 @@ async def _analyze_image_with_omniparser_core(
         with open(image_path, "rb") as f:
             image_data = f.read()
 
-        omniparser_client = OmniParserClient(base_url="http://192.168.1.28:7860")  # TODO: Make base_url configurable
+        omniparser_client = OmniParserClient(base_url="http://192.168.1.28:7860")
         result = await omniparser_client.process_image(
             image_data=image_data, box_threshold=box_threshold, iou_threshold=iou_threshold
         )

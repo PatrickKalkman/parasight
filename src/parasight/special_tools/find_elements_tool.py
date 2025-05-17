@@ -35,23 +35,24 @@ class FindElementsResultOutput(BaseModel):
 def _find_elements_by_description_core(
     parsed_data: OmniParserResultInput,  # Use OmniParserResultInput
     description: str,
-    match_type: Literal["contains", "exact", "startswith", "endswith"] = "contains",
-    case_sensitive: bool = False,
-    max_results: int = 5,
-) -> FindElementsResultOutput:  # Use FindElementsResultOutput
+    match_type: Literal["contains", "exact", "startswith", "endswith"],
+) -> FindElementsResultOutput:
     """
     Find elements in OmniParser results that match a description.
 
     Args:
         parsed_data: The parsed data from OmniParser
         description: Description of the element to find
-        match_type: How to match the description to element text
+        match_type: How to match the description to element text (contains, exact, startswith, endswith)
         case_sensitive: Whether matching should be case-sensitive
         max_results: Maximum number of matching elements to return
 
     Returns:
         Pydantic model instance with matching elements
     """
+    case_sensitive = False
+    max_results = 5
+
     if not parsed_data.success:
         return FindElementsResultOutput(success=False, error=parsed_data.error or "Invalid parsed data")
 

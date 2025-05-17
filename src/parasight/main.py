@@ -2,7 +2,7 @@
 import asyncio
 import os
 
-from agents import Agent, Runner
+from agents import Agent, Runner, trace
 from dotenv import load_dotenv
 
 # --------------------------------------------------------------
@@ -17,23 +17,18 @@ from parasight.special_tools.validate_element_exists_tool import validate_elemen
 # Construct the path to the .env file in the project root
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
-dotenv_path = os.path.join(project_root, '.env')
+dotenv_path = os.path.join(project_root, ".env")
 
 # Try to load from .env file
 load_dotenv(dotenv_path)
 
-# Check if OPENAI_API_KEY is set and valid
-api_key = os.getenv('OPENAI_API_KEY')
+# Check if OPENAI_API_KEY is set
+api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
-    print(f"Error: OPENAI_API_KEY not found in {dotenv_path}")
+    print(f"Warning: OPENAI_API_KEY not found in {dotenv_path}")
     print("Please set your OPENAI_API_KEY in the .env file or as an environment variable")
-    print("Example .env file content: OPENAI_API_KEY=sk-your-api-key-here")
+    print("Example .env file content: OPENAI_API_KEY=your-api-key-here")
     raise ValueError("OPENAI_API_KEY not found. Please set it in your .env file or environment.")
-elif not api_key.startswith('sk-'):
-    print(f"Error: Invalid OPENAI_API_KEY format in {dotenv_path}")
-    print("OpenAI API keys should start with 'sk-' followed by alphanumeric characters")
-    print("Get your API key from https://platform.openai.com/api-keys")
-    raise ValueError("Invalid OPENAI_API_KEY format. Please check your API key.")
 else:
     print(f"OPENAI_API_KEY loaded successfully from {dotenv_path}")
 
@@ -64,13 +59,14 @@ agent = Agent(
 
 async def main():
     # Natural‑language task prompt – the agent plans the calls itself
-    result = await Runner.run(
-        agent,
-        "Open http://192.168.1.28:3000 and run the login flow with "
-        "username='demo' & password='password123'. "
-        "Return PASS if redirected to /dashboard, else FAIL.",
-    )
-    print(result.final_output)
+    with trace("Running UI test agent..."):
+        result = await Runner.run(
+            agent,
+            "Open http://192.168.1.28:3000 and run the login flow with "
+            "username='demo' & password='password123'. "
+            "Return PASS if redirected to /dashboard, else FAIL.",
+        )
+        print(result.final_output)
     # result.full_output gives you every intermediate tool call if you want traces
 
 

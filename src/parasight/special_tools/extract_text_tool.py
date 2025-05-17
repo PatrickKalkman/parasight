@@ -1,6 +1,6 @@
 import ast
 import re
-from typing import Dict, List, Optional, Tuple  # Add List, Dict, Tuple
+from typing import Dict, List, Optional, Tuple  # Add List
 
 from agents import function_tool
 from pydantic import BaseModel, Field  # Import Pydantic components
@@ -23,15 +23,12 @@ class OmniParserElement(BaseModel):
 class OmniParserData(BaseModel):
     image: str
     parsed_content_list: str
-    label_coordinates: str  # Added field for coordinates string
-    # model_config = ConfigDict(extra='allow') # Removed to enforce strict schema
 
 
 class OmniParserResultInput(BaseModel):  # Input model
     success: bool
     data: Optional[OmniParserData] = None
     error: Optional[str] = None
-    # model_config = ConfigDict(extra='allow') # Removed to enforce strict schema
 
 
 class ExtractedElementOutput(BaseModel):  # Output model for one element
@@ -63,7 +60,7 @@ def _parse_coordinates(coords_str: str) -> Dict[str, List[float]]:
             return {
                 k: v
                 for k, v in coords_dict.items()
-                if isinstance(v, list) # and all(isinstance(n, (int, float)) for n in v) # Stricter check if needed
+                if isinstance(v, list)  # and all(isinstance(n, (int, float)) for n in v) # Stricter check if needed
             }
         return {}
     except (ValueError, SyntaxError, TypeError):
@@ -85,55 +82,42 @@ def _parse_element_line(line: str) -> Optional[Tuple[str, str, str]]:
 
 # Core logic function (without decorator)
 def _extract_text_from_elements_core(
-    parsed_data: OmniParserResultInput, element_type_filter: Optional[str] = None # Renamed for clarity
+    parsed_data: OmniParserResultInput, element_type: Optional[str] = None
 ) -> ExtractedTextResultOutput:
     """
-    Extract text and position from elements described in OmniParser results,
-    optionally filtered by type.
+    Extract text from elements in OmniParser results, optionally filtered by type.
 
     Args:
-        parsed_data: The parsed data from OmniParser (as a Pydantic model).
-        element_type_filter: Optional filter for element type (e.g., "Text Box").
+        parsed_data: The parsed data from OmniParser
+        element_type: Optional filter for element type
 
     Returns:
-        Pydantic model instance with extracted text from elements.
+        Pydantic model instance with extracted text from elements
     """
+    # Pydantic automatically validates/converts the input dict to OmniParserResultInput
     if not parsed_data.success:
-        return ExtractedTextResultOutput(success=False, error=parsed_data.error or "OmniParser analysis failed")
+        # Return model instance even on failure
+        return ExtractedTextResultOutput(success=False, error=parsed_data.error or "Invalid parsed data")
 
-    if not parsed_data.data or not parsed_data.data.parsed_content_list or not parsed_data.data.label_coordinates:
-        return ExtractedTextResultOutput(success=False, error="Missing parsed content or coordinates in OmniParser data")
-
-    # Parse coordinates
-    coordinates = _parse_coordinates(parsed_data.data.label_coordinates)
-    if not coordinates:
-        # Warning or error if coordinates couldn't be parsed? For now, proceed without positions.
-        pass # Or return ExtractedTextResultOutput(success=False, error="Could not parse coordinates")
+    if not parsed_data.data or not parsed_data.data.parsed_content_list:
+        return ExtractedTextResultOutput(success=False, error="No elements found in parsed data")
 
     extracted_elements_output: List[ExtractedElementOutput] = []
-    lines = parsed_data.data.parsed_content_list.strip().split('\n')
 
-    for line in lines:
-        parsed_line = _parse_element_line(line)
-        if not parsed_line:
-            continue # Skip lines that don't match the expected format
-
-        element_type_parsed, element_id_parsed, text_parsed = parsed_line
-
-        # Apply element type filter if provided
-        if element_type_filter and element_type_parsed != element_type_filter:
+    for element in parsed_data.data.parsed_content_list:
+        # Skip elements that don't match the requested type
+        if element_type and element.element_type != element_type:
             continue
 
-        # Get coordinates using the parsed ID
-        coords = coordinates.get(element_id_parsed)
-        center_x, center_y = (coords[0], coords[1]) if coords and len(coords) >= 2 else (None, None)
-
-        if text_parsed: # Only add elements with non-empty text
+        text = (element.text or "").strip()
+        if text:
+            # Ensure element_type is not None before passing to model
+            element_type_str = element.element_type or "unknown"
             extracted_elements_output.append(
                 ExtractedElementOutput(
-                    text=text_parsed,
-                    position=Position(x=center_x, y=center_y),
-                    element_type=element_type_parsed,
+                    text=text,
+                    position=Position(x=element.center_x, y=element.center_y),
+                    element_type=element_type_str,
                 )
             )
 

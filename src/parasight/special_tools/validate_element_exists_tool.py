@@ -42,8 +42,6 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
         image_path=screenshot_result.file_path, box_threshold=0.05, iou_threshold=0.1
     )
 
-    # TODO: Consider deleting the temporary screenshot file: os.remove(screenshot_result.file_path)
-
     if not analysis_result.get("success", False):
         return {"success": False, "error": analysis_result.get("error", "Failed to analyze image")}
 
