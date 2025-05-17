@@ -26,22 +26,23 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
 
     wait_time = 1000
 
+    # Define a path for the temporary screenshot
+    screenshot_file_path = "temp_validation_screenshot.png"
+
     # Take a screenshot (returns ScreenshotResultOutput model)
     screenshot_result: ScreenshotResultOutput = await _take_screenshot_core(
-        url=url, wait_time=wait_time, output_format="base64"
+        url=url, wait_time=wait_time, output_file=screenshot_file_path
     )
 
-    if not screenshot_result.success:
-        return {"success": False, "error": screenshot_result.error or "Failed to take screenshot"}
+    if not screenshot_result.success or not screenshot_result.file_path:
+        return {"success": False, "error": screenshot_result.error or "Failed to take screenshot or file path missing"}
 
-    if not screenshot_result.image_base64:
-        return {"success": False, "error": "Screenshot taken but no base64 image data found"}
-
-    # Analyze the screenshot with OmniParser (returns Dict for now, ideally should be Pydantic too)
-    # Pass base64 data directly
+    # Analyze the screenshot with OmniParser using the file path
     analysis_result = await _analyze_image_with_omniparser_core(
-        image_base64=screenshot_result.image_base64  # Removed source_type argument
+        image_path=screenshot_result.file_path, image_base64=None, box_threshold=0.05, iou_threshold=0.1
     )
+
+    # TODO: Consider deleting the temporary screenshot file: os.remove(screenshot_result.file_path)
 
     if not analysis_result.get("success", False):
         return {"success": False, "error": analysis_result.get("error", "Failed to analyze image")}

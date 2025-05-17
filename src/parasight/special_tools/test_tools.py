@@ -60,14 +60,17 @@ async def find_element_position(url, element_description, screen_width, screen_h
 
 async def test_tools():
     url = "http://192.168.1.28:3000/"
+    screenshot_output_file = "example_screenshot.png"
 
     print("=== Testing _take_screenshot_core ===")
-    screenshot_result = await _take_screenshot_core(url=url, output_format="file", output_file="example_screenshot.png")
+    screenshot_result = await _take_screenshot_core(url=url, output_file=screenshot_output_file, wait_time=500)
     print(f"Screenshot result: {screenshot_result.model_dump_json(indent=2)}")
     print()
 
     print("=== Testing _analyze_image_with_omniparser_core ===")
-    analysis_result: dict = await _analyze_image_with_omniparser_core(image_path="example_screenshot.png")
+    analysis_result: dict = await _analyze_image_with_omniparser_core(
+        image_path=screenshot_output_file, image_base64=None, box_threshold=0.05, iou_threshold=0.1
+    )
     print(f"Analysis result status: {analysis_result.get('success')}")
 
     data = analysis_result.get("data", {}) if isinstance(analysis_result, dict) else {}
