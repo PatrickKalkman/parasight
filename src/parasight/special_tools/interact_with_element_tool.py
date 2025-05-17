@@ -143,7 +143,7 @@ async def _interact_with_element_sequence_core(
                     result_data["position"] = PositionModel(x=x, y=y)
 
                     success_payload = InteractionSuccessResultModel(**result_data)
-                    results.append(InteractionOutputModel(success=True, result=success_payload))
+                    results.append(InteractionOutputModel(success=True, result=success_payload, error=None))
 
                 except Exception as e:
                     results.append(InteractionOutputModel(success=False, error=f"Error in step {i + 1}: {str(e)}", result=None))
