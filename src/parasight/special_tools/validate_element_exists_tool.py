@@ -42,6 +42,8 @@ async def _validate_element_exists_core(base64_image_string: str, element_descri
         analysis_result = await _analyze_image_with_omniparser_core(
             image_path=screenshot_file_path, box_threshold=0.05, iou_threshold=0.1
         )
+    except Exception as e:
+        return {"success": False, "error": f"OmniParser analysis failed unexpectedly: {e}"}
 
     if not analysis_result.get("success", False):
         return {"success": False, "error": analysis_result.get("error", "Failed to analyze image")}
