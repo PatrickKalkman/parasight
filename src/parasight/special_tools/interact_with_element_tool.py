@@ -148,12 +148,11 @@ async def _interact_with_element_sequence_core(
                     # Take and save screenshot if requested
                     if take_screenshots:
                         screenshot_bytes = await page.screenshot()
-                        result_data["screenshot_after_action"] = base64.b64encode(screenshot_bytes).decode("utf-8")
-
                         # Save the screenshot to a file
                         screenshot_path = f"screenshot_after_step_{i + 1}_{action}.png"
                         with open(screenshot_path, "wb") as f:
                             f.write(screenshot_bytes)
+                        result_data["screenshot_after_action"] = screenshot_path
                     else:
                         # Provide a placeholder if screenshots disabled
                         result_data["screenshot_after_action"] = ""
