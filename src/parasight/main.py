@@ -81,9 +81,14 @@ async def main():
     with trace("Running UI test agent..."):
         result = await Runner.run(
             agent,
-            "Open http://192.168.1.28:3000 and run the login flow with "
-            "username='demo' & password='password123' use the 'enter your username' and 'enter your password' fields for entering the data. "
-            "Return PASS if the screen after login shows 'You have successfully logged in to your account', else FAIL.",
+            "Test the login flow for the application at http://192.168.1.28:3000. "
+            "Use username 'demo' and password 'password123'. "
+            "The username field is described by 'enter your username'. "
+            "The password field is described by 'enter your password'. "
+            "The login button is labeled 'Login'. "
+            "The test passes if the page after login contains the success message: "
+            "'You have successfully logged in to your account'. "
+            "Otherwise, the test fails. Your final answer should be PASS or FAIL.",
         )
         print(result.final_output)
     # result.full_output gives you every intermediate tool call if you want traces
