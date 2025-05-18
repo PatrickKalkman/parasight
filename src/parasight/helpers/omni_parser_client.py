@@ -1,6 +1,8 @@
+import ast
 import json
 import logging
 import os
+import re # Added re
 from typing import Any, Dict
 
 import httpx
@@ -61,22 +63,32 @@ class OmniParserClient:
             response = await self.client.post(f"{self.base_url}/process_image", params=params, files=files)
 
             response.raise_for_status()
-            result = response.json()
+            response_text = response.text
 
-            # Parse string fields if they contain JSON
-            try:
-                if isinstance(result.get("parsed_content_list"), str):
-                    result["parsed_content_list"] = json.loads(result["parsed_content_list"])
-                if isinstance(result.get("label_coordinates"), str):
-                    result["label_coordinates"] = json.loads(result["label_coordinates"])
-            except json.JSONDecodeError:
-                logger.warning("Could not parse JSON from response strings")
+            # Clean np.float32() calls from the response text.
+            # This makes the string evaluatable by ast.literal_eval.
+            cleaned_response_text = re.sub(r"np\.float32\(([^)]+)\)", r"\1", response_text)
 
-            return {"success": True, "data": result}
+            # Safely evaluate the cleaned string as a Python literal (dictionary).
+            # This result is expected to be in the format:
+            # {
+            #   'success': True,
+            #   'data': {
+            #     'parsed_content_list': "...", # This is a string
+            #     'label_coordinates': "{'id': [coords], ...}" # This is also a string
+            #   }
+            # }
+            # The label_coordinates string will be parsed later by _parse_coordinates.
+            parsed_result = ast.literal_eval(cleaned_response_text)
+            
+            return parsed_result
 
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error from OmniParser: {e.response.status_code} - {e.response.text}")
             return {"success": False, "error": f"HTTP error: {e.response.status_code}", "message": e.response.text}
+        except (SyntaxError, ValueError) as e:
+            logger.error(f"Failed to parse OmniParser response string: '{response_text}'. Error: {e}")
+            return {"success": False, "error": "Failed to parse OmniParser response", "message": str(e)}
         except Exception as e:
             logger.error(f"Error processing image with OmniParser: {str(e)}")
             return {"success": False, "error": str(e)}
