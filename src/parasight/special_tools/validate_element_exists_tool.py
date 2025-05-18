@@ -1,5 +1,9 @@
 from typing import Any, Dict
 
+import base64
+import os
+from typing import Any, Dict
+
 from agents import function_tool
 
 from parasight.special_tools.analyze_image_with_omniparser_tool import _analyze_image_with_omniparser_core
@@ -7,40 +11,37 @@ from parasight.special_tools.analyze_image_with_omniparser_tool import _analyze_
 # Import Pydantic models used by the tools
 from parasight.special_tools.extract_text_tool import OmniParserResultInput  # Import the input model
 from parasight.special_tools.find_elements_tool import FindElementsResultOutput, _find_elements_by_description_core
-from parasight.special_tools.take_screenshot_tool import ScreenshotResultOutput, _take_screenshot_core
 
 
 # Core logic function (without decorator)
-async def _validate_element_exists_core(url: str, element_description: str, wait_time: int) -> Dict[str, Any]:
+async def _validate_element_exists_core(base64_image_string: str, element_description: str) -> Dict[str, Any]:
     """
-    Navigate to a URL and validate if an element exists on the page.
+    Validate if an element exists on a given image.
 
     Args:
-        url: The URL to navigate to
+        base64_image_string: Base64 encoded string of the image to analyze.
         element_description: Description of the element to find
-        wait_time: Time to wait after page load in milliseconds
 
     Returns:
         Validation result with element details if found
     """
 
-    wait_time = 1000
+    screenshot_file_path = "temp_validation_image.png"  # Path for the temporary image
 
-    # Define a path for the temporary screenshot
-    screenshot_file_path = "temp_validation_screenshot.png"
+    try:
+        # Decode the base64 string and save it as an image file
+        image_data = base64.b64decode(base64_image_string)
+        with open(screenshot_file_path, "wb") as f:
+            f.write(image_data)
+    except Exception as e:
+        # If decoding or file writing fails, return an error
+        return {"success": False, "error": f"Failed to decode or save image: {e}"}
 
-    # Take a screenshot (returns ScreenshotResultOutput model)
-    screenshot_result: ScreenshotResultOutput = await _take_screenshot_core(
-        url=url, wait_time=wait_time, output_file=screenshot_file_path
-    )
-
-    if not screenshot_result.success or not screenshot_result.file_path:
-        return {"success": False, "error": screenshot_result.error or "Failed to take screenshot or file path missing"}
-
-    # Analyze the screenshot with OmniParser using the file path
-    analysis_result = await _analyze_image_with_omniparser_core(
-        image_path=screenshot_result.file_path, box_threshold=0.05, iou_threshold=0.1
-    )
+    try:
+        # Analyze the image with OmniParser using the file path
+        analysis_result = await _analyze_image_with_omniparser_core(
+            image_path=screenshot_file_path, box_threshold=0.05, iou_threshold=0.1
+        )
 
     if not analysis_result.get("success", False):
         return {"success": False, "error": analysis_result.get("error", "Failed to analyze image")}
@@ -79,6 +80,15 @@ async def _validate_element_exists_core(url: str, element_description: str, wait
             "element_exists": False,
             "error": f"No elements matching '{element_description}' found on the page",
         }
+    finally:
+        # Clean up the temporary image file
+        if os.path.exists(screenshot_file_path):
+            try:
+                os.remove(screenshot_file_path)
+            except Exception as e:
+                # Log or handle cleanup error if necessary, but don't let it overshadow the main result
+                # Consider using logger for production code instead of print
+                print(f"Error deleting temporary file {screenshot_file_path}: {e}")
 
 
 # Apply the function_tool decorator to the core logic function
