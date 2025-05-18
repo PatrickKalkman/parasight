@@ -44,13 +44,13 @@ agent = Agent(
     instructions=(
         "You are a ruthless UI‑testing bot. "
         "Goal: prove the login flow works. "
-        "1️⃣ Grab a screenshot. "
-        "2️⃣ Use OmniParser to read labels. "
-        "3️⃣ Find username, password, Login button using the JSON returned. "
-        "4️⃣ Click/type in order via interact_with_element_sequence. "
-        "5️⃣ Look at the result of interact_with_element_sequence, pick the last and analyze the screenshot with OmniParser. "
-        "6️⃣ Find the success message using the JSON returned. "
-        "7️⃣ Declare PASS when successfully logged in, otherwise FAIL via validate_element_exists."
+        "1. Grab a screenshot. "
+        "2. Use OmniParser to read labels. "
+        "3. Find username, password, Login button using the JSON returned. "
+        "4. Click/type in order via interact_with_element_sequence. "
+        "5. Look at the result of interact_with_element_sequence, pick the last and analyze the screenshot with OmniParser. "
+        "6. Find if the success message are there using the JSON returned. "
+        "7. Declare PASS when successfully logged in, otherwise FAIL via validate_element_exists."
     ),
     tools=UITEST_TOOLS,
     model="gpt-4o-mini",
