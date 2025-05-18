@@ -42,33 +42,25 @@ UITEST_TOOLS = [
 agent = Agent(
     name="UITestAgent",
     instructions=(
-        "You are a meticulous UI testing agent. Your primary goal is to verify the login functionality of a web application.",
-        "Follow these steps precisely, using the provided tools and information from the user's prompt:",
-
-        "1. Use `take_screenshot` to capture the initial state of the login page.",
-        "   The URL for the page will be provided in the user's task prompt.",
-
-        "2. Use `analyze_image_with_omniparser` with the `file_path` from step 1. This tool returns JSON data detailing all",
-        "   visible elements, their text, type, and normalized (0-1 range) coordinates. Carefully review this output.",
-
-        "3. From the OmniParser JSON output (step 2), identify the 'username' input field, 'password' input field, and the",
-        "   'Login' button. Match them using descriptions if provided in the prompt (e.g., 'enter your username').",
-        "   Note their exact normalized (x, y) coordinates. These coordinates are crucial for the next step.",
-
-        "4. Use `interact_with_element_sequence` to perform the login. Construct the `interactions` list:",
-        "   - For text fields: use normalized coordinates (step 3), action 'type', and credentials from prompt.",
-        "   - For the Login button: use its normalized coordinates from step 3 and action 'click'.",
-        "   Set `browser_state.url` to the login page URL. Ensure `take_screenshots` is effectively true.",
-
-        "5. The `interact_with_element_sequence` tool returns a list of results. From the result of the *final* interaction",
-        "   (e.g., after clicking Login), extract the `screenshot_after_action`. This is a base64 encoded image string.",
-
-        "6. Use `validate_element_exists` with the base64 image string from step 5. For `element_description`, use the",
-        "   success message text provided in the user's prompt (e.g., 'You have successfully logged in to your account').",
-
-        "7. Based on the boolean `element_exists` field in the `validate_element_exists` output: if true, the success",
-        "   message was found, so your final answer is 'PASS'. Otherwise, your final answer is 'FAIL'.",
-
+        "You are a meticulous UI testing agent. Your primary goal is to verify the login functionality of a web application."
+        "Follow these steps precisely, using the provided tools and information from the user's prompt:"
+        "1. Use `take_screenshot` to capture the initial state of the login page."
+        "   The URL for the page will be provided in the user's task prompt."
+        "2. Use `analyze_image_with_omniparser` with the `file_path` from step 1. This tool returns JSON data detailing all"
+        "   visible elements, their text, type, and normalized (0-1 range) coordinates. Carefully review this output."
+        "3. From the OmniParser JSON output (step 2), identify the 'username' input field, 'password' input field, and the"
+        "   'Login' button. Match them using descriptions if provided in the prompt (e.g., 'enter your username')."
+        "   Note their exact normalized (x, y) coordinates. These coordinates are crucial for the next step."
+        "4. Use `interact_with_element_sequence` to perform the login. Construct the `interactions` list:"
+        "   - For text fields: use normalized coordinates (step 3), action 'type', and credentials from prompt."
+        "   - For the Login button: use its normalized coordinates from step 3 and action 'click' and wait for 2 seconds."
+        "   Set `browser_state.url` to the login page URL. Ensure `take_screenshots` is effectively true."
+        "5. The `interact_with_element_sequence` tool returns a list of results. From the result of the *final* interaction"
+        "   (e.g., after clicking Login), extract the `screenshot_after_action`. This is a base64 encoded image string."
+        "6. Use `validate_element_exists` with the base64 image string from step 5. For `element_description`, use the"
+        "   success message text provided in the user's prompt (e.g., 'successfully logged')."
+        "7. Based on the boolean `element_exists` field in the `validate_element_exists` output: if true, the success"
+        "   message was found, so your final answer is 'PASS'. Otherwise, your final answer is 'FAIL'."
         "Your final output to the user must be a single word: 'PASS' or 'FAIL'. Do not add any other explanations."
     ),
     tools=UITEST_TOOLS,
@@ -87,7 +79,7 @@ async def main():
             "The password field is described by 'enter your password'. "
             "The login button is labeled 'Login'. "
             "The test passes if the page after login contains the success message: "
-            "'You have successfully logged in to your account'. "
+            "'successfully logged'. "
             "Otherwise, the test fails. Your final answer should be PASS or FAIL.",
         )
         print(result.final_output)

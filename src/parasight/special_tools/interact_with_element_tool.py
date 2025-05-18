@@ -1,4 +1,3 @@
-import base64
 from typing import List, Literal, Optional
 
 from agents import function_tool
