@@ -3,7 +3,7 @@ from typing import Any, Dict
 from agents import function_tool
 
 # Import Pydantic models used by the tools
-from parasight.special_tools.extract_text_tool import OmniParserResultInput  # Import the input model
+from parasight.special_tools.omniparser_models import OmniParserResultInput  # Import the input model
 
 
 # Core logic function (without decorator)
