@@ -84,7 +84,6 @@ async def main():
             "Otherwise, the test fails. Your final answer should be PASS or FAIL.",
         )
         print(result.final_output)
-    # result.full_output gives you every intermediate tool call if you want traces
 
 
 if __name__ == "__main__":
