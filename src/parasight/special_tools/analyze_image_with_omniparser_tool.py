@@ -40,6 +40,8 @@ async def _analyze_image_with_omniparser_core(
             image_data=image_data, box_threshold=box_threshold, iou_threshold=iou_threshold
         )
 
+        print(f"OmniParser result: {result}")
+
         return result
     except Exception as e:
         return {"success": False, "error": str(e)}
