@@ -69,6 +69,9 @@ def _find_elements_by_description_core(
     # Adjust description based on case sensitivity
     search_description = description if case_sensitive else description.lower()
 
+    IMAGE_WIDTH = 1280
+    IMAGE_HEIGHT = 720
+
     for line in lines:
         parsed_line = _parse_element_line(line)
         if not parsed_line:
@@ -91,22 +94,28 @@ def _find_elements_by_description_core(
 
         if is_match:
             # Get coordinates using the parsed ID
-            coords = coordinates.get(element_id_parsed)
-            center_x, center_y = (coords[0], coords[1]) if coords and len(coords) >= 2 else (None, None)
+            raw_coords = coordinates.get(element_id_parsed)  # This is List[float] or None
+            
+            abs_center_x, abs_center_y = None, None
+            # raw_coords are normalized (0-1). Convert to absolute pixel values.
+            if raw_coords and len(raw_coords) >= 2:
+                # Assuming raw_coords[0] (x) and raw_coords[1] (y) are valid floats
+                abs_center_x = int(raw_coords[0] * IMAGE_WIDTH)
+                abs_center_y = int(raw_coords[1] * IMAGE_HEIGHT)
 
             # Create a simple OmniParserElement for the output
             # Note: We don't have the full element details here, just text, type, and position
             element_data = OmniParserElement(
                 text=text_parsed,
-                center_x=center_x,
-                center_y=center_y,
+                center_x=abs_center_x,
+                center_y=abs_center_y,
                 element_type=element_type_parsed,
             )
 
             output_matching_elements.append(
                 MatchingElementOutput(
                     element=element_data,
-                    position=Position(x=center_x, y=center_y),
+                    position=Position(x=abs_center_x, y=abs_center_y),
                     text=text_parsed,  # Use the original case text
                     element_type=element_type_parsed,
                 )
