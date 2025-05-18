@@ -1,5 +1,3 @@
-from typing import Any, Dict
-
 import base64
 import os
 from typing import Any, Dict
@@ -19,7 +17,7 @@ async def _validate_element_exists_core(base64_image_string: str, element_descri
     Validate if an element exists on a given image.
 
     Args:
-        base64_image_string: Base64 encoded string of the image to analyze.
+        base64_image_string: Base64 encoded string of the image to analyze, this is obtained from the interact_with_element_sequence tool
         element_description: Description of the element to find
 
     Returns:

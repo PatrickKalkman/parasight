@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 
 # --------------------------------------------------------------
 from parasight.special_tools.analyze_image_with_omniparser_tool import analyze_image_with_omniparser
-from parasight.special_tools.find_elements_tool import find_elements_by_description
 from parasight.special_tools.interact_with_element_tool import interact_with_element_sequence
 
 # ---- import your function_tools ------------------------------
@@ -36,7 +35,6 @@ else:
 UITEST_TOOLS = [
     take_screenshot,
     analyze_image_with_omniparser,
-    find_elements_by_description,
     validate_element_exists,
     interact_with_element_sequence,
 ]
@@ -48,9 +46,11 @@ agent = Agent(
         "Goal: prove the login flow works. "
         "1️⃣ Grab a screenshot. "
         "2️⃣ Use OmniParser to read labels. "
-        "3️⃣ Find username, password, Login button. "
+        "3️⃣ Find username, password, Login button using the JSON returned. "
         "4️⃣ Click/type in order via interact_with_element_sequence. "
-        "5️⃣ Declare PASS when successfully logged in, otherwise FAIL."
+        "5️⃣ Look at the result of interact_with_element_sequence, pick the last and analyze the screenshot with OmniParser. "
+        "6️⃣ Find the success message using the JSON returned. "
+        "7️⃣ Declare PASS when successfully logged in, otherwise FAIL via validate_element_exists."
     ),
     tools=UITEST_TOOLS,
     model="gpt-4o-mini",
@@ -63,7 +63,7 @@ async def main():
         result = await Runner.run(
             agent,
             "Open http://192.168.1.28:3000 and run the login flow with "
-            "username='demo' & password='password123'. "
+            "username='demo' & password='password123' use the 'enter your username' and 'enter your password' fields for entering the data. "
             "Return PASS if the screen after login shows 'You have successfully logged in to your account', else FAIL.",
         )
         print(result.final_output)

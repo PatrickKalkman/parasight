@@ -95,13 +95,14 @@ def _find_elements_by_description_core(
         if is_match:
             # Get coordinates using the parsed ID
             raw_coords = coordinates.get(element_id_parsed)  # This is List[float] or None
-            
+
             abs_center_x, abs_center_y = None, None
             # raw_coords are normalized (0-1). Convert to absolute pixel values.
             if raw_coords and len(raw_coords) >= 2:
                 # Assuming raw_coords[0] (x) and raw_coords[1] (y) are valid floats
                 abs_center_x = int(raw_coords[0] * IMAGE_WIDTH)
                 abs_center_y = int(raw_coords[1] * IMAGE_HEIGHT)
+                print(f"Coordinates for {element_id_parsed}: {raw_coords} -> ({abs_center_x}, {abs_center_y})")
 
             # Create a simple OmniParserElement for the output
             # Note: We don't have the full element details here, just text, type, and position

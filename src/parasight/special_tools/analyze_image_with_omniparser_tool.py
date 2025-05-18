@@ -1,10 +1,10 @@
+import base64
+import os
 from typing import (
     Any,
     Dict,
     Optional,  # Added Optional
 )
-import base64
-import os
 
 from agents import function_tool
 
@@ -42,8 +42,6 @@ async def _analyze_image_with_omniparser_core(
             image_data=image_data, box_threshold=box_threshold, iou_threshold=iou_threshold
         )
 
-        print(f"OmniParser result: {result}")
-
         if result.get("success") and isinstance(result.get("data"), dict) and "image" in result["data"]:
             base64_image_string = result["data"]["image"]
             # Remove the image from the result dictionary before returning
@@ -55,7 +53,7 @@ async def _analyze_image_with_omniparser_core(
                 base_name, ext = os.path.splitext(image_path)
                 # Use original extension if available, otherwise default to .png
                 output_image_filename = f"{base_name}_omniparser_output{ext if ext else '.png'}"
-                
+
                 with open(output_image_filename, "wb") as img_file:
                     img_file.write(image_bytes)
                 print(f"Saved OmniParser processed image to: {output_image_filename}")

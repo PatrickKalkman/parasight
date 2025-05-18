@@ -81,7 +81,7 @@ async def _interact_with_element_sequence_core(
                 results.append(
                     InteractionOutputModel(success=False, error="Could not determine page viewport size.", result=None)
                 )
-                await browser.close() # Ensure browser is closed before returning
+                await browser.close()  # Ensure browser is closed before returning
                 return results
 
             # Perform each interaction in sequence
@@ -95,8 +95,8 @@ async def _interact_with_element_sequence_core(
                 normalized_x, normalized_y = element.position.x, element.position.y
 
                 # Scale to pixel coordinates
-                pixel_x = int(normalized_x * viewport_size['width'])
-                pixel_y = int(normalized_y * viewport_size['height'])
+                pixel_x = int(normalized_x * viewport_size["width"])
+                pixel_y = int(normalized_y * viewport_size["height"])
 
                 # Perform the requested action
                 result_data: dict = {}
@@ -121,9 +121,13 @@ async def _interact_with_element_sequence_core(
                             continue
 
                         print(f"Step {i + 1}: Typing text: {text_to_type} at position ({pixel_x}, {pixel_y})")
-                        await page.mouse.click(pixel_x, pixel_y) # Click at the target before typing
+                        await page.mouse.click(pixel_x, pixel_y)  # Click at the target before typing
                         await page.keyboard.type(text_to_type)
-                        result_data = {"action_performed": "type", "position": {"x": pixel_x, "y": pixel_y}, "text": text_to_type}
+                        result_data = {
+                            "action_performed": "type",
+                            "position": {"x": pixel_x, "y": pixel_y},
+                            "text": text_to_type,
+                        }
 
                     elif action == "scroll_to_view":
                         await page.evaluate(f"window.scrollTo({pixel_x}, {pixel_y})")
@@ -160,7 +164,7 @@ async def _interact_with_element_sequence_core(
                     # Ensure position in result_data is a PositionModel instance or dict
                     # The "position" key in result_data should already hold a dict like {"x": pixel_x, "y": pixel_y}
                     # from the action-specific assignments. This explicit assignment ensures it's a PositionModel.
-                    result_data["position"] = PositionModel(x=pixel_x, y=pixel_y) # Use pixel_x, pixel_y
+                    result_data["position"] = PositionModel(x=pixel_x, y=pixel_y)  # Use pixel_x, pixel_y
 
                     success_payload = InteractionSuccessResultModel(**result_data)
                     results.append(InteractionOutputModel(success=True, result=success_payload, error=None))
