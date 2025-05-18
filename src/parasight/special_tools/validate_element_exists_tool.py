@@ -26,7 +26,11 @@ def _validate_element_exists_core(analysis_result: OmniParserResultInput, elemen
 
         if not analysis_result.success:
             error_msg = analysis_result.error or "OmniParser analysis failed without a specific error message."
-            return {"success": False, "element_exists": False, "error": f"Upstream OmniParser analysis failed: {error_msg}"}
+            return {
+                "success": False,
+                "element_exists": False,
+                "error": f"Upstream OmniParser analysis failed: {error_msg}",
+            }
 
         # 2. Check if the necessary data for searching is present
         if not analysis_result.data:
@@ -35,7 +39,7 @@ def _validate_element_exists_core(analysis_result: OmniParserResultInput, elemen
                 "element_exists": False,
                 "error": "OmniParser analysis succeeded but returned no 'data' object. Cannot perform validation.",
             }
-        
+
         # analysis_result.data is an OmniParserData instance.
         # analysis_result.data.parsed_content_list is a string (cannot be None by Pydantic model).
         # It can be an empty string, which is handled correctly by the 'in' operator.
@@ -43,7 +47,11 @@ def _validate_element_exists_core(analysis_result: OmniParserResultInput, elemen
 
         # 3. Ensure element_description is a string
         if not isinstance(element_description, str):
-             return {"success": False, "element_exists": False, "error": "Invalid element_description, must be a string."}
+            return {
+                "success": False,
+                "element_exists": False,
+                "error": "Invalid element_description, must be a string.",
+            }
 
         # 4. Perform the case-insensitive search
         if element_description.lower() in parsed_text_content.lower():
