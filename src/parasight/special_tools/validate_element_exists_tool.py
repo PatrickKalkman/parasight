@@ -12,36 +12,28 @@ from parasight.special_tools.find_elements_tool import FindElementsResultOutput,
 
 
 # Core logic function (without decorator)
-async def _validate_element_exists_core(base64_image_string: str, element_description: str) -> Dict[str, Any]:
+async def _validate_element_exists_core(image_path: str, element_description: str) -> Dict[str, Any]:
     """
     Validate if an element exists on a given image.
 
     Args:
-        base64_image_string: Base64 encoded string of the image to analyze, this is obtained from the interact_with_element_sequence tool
-        element_description: Description of the element to find
+        image_path: Path to the image file to analyze. This path is typically obtained from other tools like `take_screenshot` or `interact_with_element_sequence`.
+        element_description: Description of the element to find.
 
     Returns:
-        Validation result with element details if found
+        Validation result with element details if found.
     """
 
-    screenshot_file_path = "temp_validation_image.png"  # Path for the temporary image
-
+    # All subsequent operations are wrapped in a try.
     try:
-        # Decode the base64 string and save it as an image file
-        image_data = base64.b64decode(base64_image_string)
-        with open(screenshot_file_path, "wb") as f:
-            f.write(image_data)
-    except Exception as e:
-        # If decoding or file writing fails, return an error
-        return {"success": False, "error": f"Failed to decode or save image: {e}"}
+        # Check if the image file exists
+        if not os.path.exists(image_path):
+            return {"success": False, "error": f"Image file not found at path: {image_path}"}
 
-    # All subsequent operations are wrapped in a try to ensure finally is always called for cleanup,
-    # assuming the initial file creation was successful.
-    try:
         try:
             # Analyze the image with OmniParser using the file path
             analysis_result = await _analyze_image_with_omniparser_core(
-                image_path=screenshot_file_path, box_threshold=0.05, iou_threshold=0.1
+                image_path=image_path, box_threshold=0.05, iou_threshold=0.1
             )
         except Exception as e:
             return {"success": False, "error": f"OmniParser analysis failed unexpectedly: {e}"}
@@ -83,15 +75,9 @@ async def _validate_element_exists_core(base64_image_string: str, element_descri
                 "element_exists": False,
                 "error": f"No elements matching '{element_description}' found on the page",
             }
-    finally:
-        # Clean up the temporary image file
-        if os.path.exists(screenshot_file_path):
-            try:
-                os.remove(screenshot_file_path)
-            except Exception as e:
-                # Log or handle cleanup error if necessary, but don't let it overshadow the main result
-                # Consider using logger for production code instead of print
-                print(f"Error deleting temporary file {screenshot_file_path}: {e}")
+    except Exception as e:
+        # Catch any other unexpected errors during the process
+        return {"success": False, "error": f"An unexpected error occurred: {e}"}
 
 
 # Apply the function_tool decorator to the core logic function
