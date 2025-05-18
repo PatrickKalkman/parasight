@@ -1,9 +1,6 @@
-import os
 from typing import Any, Dict
 
 from agents import function_tool
-
-from parasight.special_tools.analyze_image_with_omniparser_tool import _analyze_image_with_omniparser_core
 
 # Import Pydantic models used by the tools
 from parasight.special_tools.extract_text_tool import OmniParserResultInput  # Import the input model
@@ -11,13 +8,13 @@ from parasight.special_tools.find_elements_tool import FindElementsResultOutput,
 
 
 # Core logic function (without decorator)
-async def _validate_element_exists_core(image_path: str, element_description: str) -> Dict[str, Any]:
+def _validate_element_exists_core(analysis_result: Dict[str, Any], element_description: str) -> Dict[str, Any]:
     """
-    Validate if an element exists on a given image.
+    Validate if an element exists based on OmniParser analysis results.
 
     Args:
-        image_path: Path to the image file to analyze. This path is typically obtained from other tools like `take_screenshot` or `interact_with_element_sequence`.
-        element_description: Description of the element to find.
+        analysis_result: The output dictionary from the analyze_image_with_omniparser_tool.
+        element_description: Description of the element to find within the analysis result.
 
     Returns:
         Validation result with element details if found.
@@ -25,20 +22,11 @@ async def _validate_element_exists_core(image_path: str, element_description: st
 
     # All subsequent operations are wrapped in a try.
     try:
-        # Check if the image file exists
-        if not os.path.exists(image_path):
-            return {"success": False, "error": f"Image file not found at path: {image_path}"}
-
-        try:
-            # Analyze the image with OmniParser using the file path
-            analysis_result = await _analyze_image_with_omniparser_core(
-                image_path=image_path, box_threshold=0.05, iou_threshold=0.1
-            )
-        except Exception as e:
-            return {"success": False, "error": f"OmniParser analysis failed unexpectedly: {e}"}
+        if not analysis_result or not isinstance(analysis_result, dict):
+            return {"success": False, "error": "Invalid analysis_result provided. Expected a dictionary."}
 
         if not analysis_result.get("success", False):
-            return {"success": False, "error": analysis_result.get("error", "Failed to analyze image")}
+            return {"success": False, "error": analysis_result.get("error", "Analysis result indicates failure.")}
 
         # Convert the analysis_result dict to the Pydantic model
         try:
