@@ -1,8 +1,7 @@
 import ast
-import json
 import logging
 import os
-import re # Added re
+import re  # Added re
 from typing import Any, Dict
 
 import httpx
@@ -80,7 +79,7 @@ class OmniParserClient:
             # }
             # The label_coordinates string will be parsed later by _parse_coordinates.
             parsed_result = ast.literal_eval(cleaned_response_text)
-            
+
             return parsed_result
 
         except httpx.HTTPStatusError as e:
