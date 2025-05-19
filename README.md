@@ -38,12 +38,8 @@ Parasight is an intelligent UI testing framework that combines Playwright, OmniP
 git clone https://github.com/PatrickKalkman/parasight.git
 cd parasight
 
-# Create and activate a virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install the package and dependencies
-pip install -e .
+# Install the package and dependencies using UV
+uv sync
 ```
 
 ### Environment Setup
