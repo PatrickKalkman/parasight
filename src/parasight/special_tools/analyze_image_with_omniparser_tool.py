@@ -46,9 +46,12 @@ async def _analyze_image_with_omniparser_core(
             image_data=image_data, box_threshold=box_threshold, iou_threshold=iou_threshold
         )
         print(f"Received response from OmniParser: {result}")
-        print(f"Received response from OmniParser: success={result.get('success', False)}")
-
-        if result.get("success") and isinstance(result.get("data"), dict) and "image" in result["data"]:
+        
+        # Check if the response is successful (no 'success' key means success, 'success': False means error)
+        is_successful = "success" not in result or result.get("success", True)
+        print(f"Response is successful: {is_successful}")
+        
+        if is_successful and isinstance(result.get("data"), dict) and "image" in result["data"]:
             print("Found image data in the response")
             base64_image_string = result["data"]["image"]
 
@@ -80,8 +83,9 @@ async def _analyze_image_with_omniparser_core(
                     f"Data keys: {result['data'].keys() if isinstance(result['data'], dict) else 'data is not a dict'}"
                 )
 
-            # Remove the image from the result dictionary before returning
-            del result["data"]["image"]
+            # Only try to remove the image if it exists in the data dictionary
+            if "data" in result and isinstance(result["data"], dict) and "image" in result["data"]:
+                del result["data"]["image"]
 
         return result
     except Exception as e:
