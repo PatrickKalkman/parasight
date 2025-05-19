@@ -67,38 +67,10 @@ For detailed setup instructions and CPU-only options, see the [OmniParser Setup 
 
 ## Usage
 
-### Running Your First Test
-
-Create a simple login test:
-
-```python
-from parasight import UITestAgent
-
-# Define your test case
-test_spec = {
-    "url": "https://your-app.com/login",
-    "credentials": {
-        "username": "test_user",
-        "password": "password123"
-    },
-    "success_criteria": "Welcome back"
-}
-
-# Run the test
-result = UITestAgent().run_test(test_spec)
-print(f"Test result: {result}")  # PASS or FAIL
-```
-
-### Using the CLI
-
-Run tests from the command line:
+### Running the Prototype
 
 ```bash
-# Run a single test
-parasight test --url https://your-app.com/login --username test_user --password password123 --success "Welcome back"
-
-# Run tests from a YAML file
-parasight test-suite tests/login_suite.yaml
+uv run ./src/parasight/main.py
 ```
 
 ## How It Works
