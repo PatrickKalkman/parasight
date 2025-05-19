@@ -51,9 +51,17 @@ async def _analyze_image_with_omniparser_core(
         is_successful = "success" not in result or result.get("success", True)
         print(f"Response is successful: {is_successful}")
 
-        if is_successful and isinstance(result.get("data"), dict) and "image" in result["data"]:
-            print("Found image data in the response")
+        # Check if image is directly in the result or in a nested data dictionary
+        if is_successful and "image" in result:
+            print("Found image data directly in the response")
+            base64_image_string = result["image"]
+        elif is_successful and isinstance(result.get("data"), dict) and "image" in result["data"]:
+            print("Found image data in the nested data dictionary")
             base64_image_string = result["data"]["image"]
+        else:
+            base64_image_string = None
+            
+        if base64_image_string:
 
             try:
                 print(f"Decoding base64 image data (length: {len(base64_image_string)})")
@@ -83,9 +91,11 @@ async def _analyze_image_with_omniparser_core(
                     f"Data keys: {result['data'].keys() if isinstance(result['data'], dict) else 'data is not a dict'}"
                 )
 
-            # Only try to remove the image if it exists in the data dictionary
-            if "data" in result and isinstance(result["data"], dict) and "image" in result["data"]:
-                del result["data"]["image"]
+        # Remove image data from result before returning
+        if "image" in result:
+            del result["image"]
+        elif "data" in result and isinstance(result["data"], dict) and "image" in result["data"]:
+            del result["data"]["image"]
 
         return result
     except Exception as e:
