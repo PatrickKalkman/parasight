@@ -44,8 +44,6 @@ async def _analyze_image_with_omniparser_core(
 
         if result.get("success") and isinstance(result.get("data"), dict) and "image" in result["data"]:
             base64_image_string = result["data"]["image"]
-            # Remove the image from the result dictionary before returning
-            del result["data"]["image"]
 
             try:
                 image_bytes = base64.b64decode(base64_image_string)
@@ -61,10 +59,9 @@ async def _analyze_image_with_omniparser_core(
                 # Log error during image saving but don't let it fail the whole operation,
                 # as the textual data might still be valuable.
                 print(f"Error saving processed image: {img_save_error}")
-                # Optionally, add this error information to the result if needed:
-                # if "errors" not in result:
-                #     result["errors"] = []
-                # result["errors"].append(f"Failed to save processed image: {img_save_error}")
+
+            # Remove the image from the result dictionary before returning
+            del result["data"]["image"]
 
         return result
     except Exception as e:
