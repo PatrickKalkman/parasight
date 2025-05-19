@@ -39,12 +39,13 @@ async def _analyze_image_with_omniparser_core(
             image_data = f.read()
         print(f"Successfully loaded image data, size: {len(image_data)} bytes")
 
-        print(f"Connecting to OmniParser at http://192.168.1.28:7860")
+        print("Connecting to OmniParser at http://192.168.1.28:7860")
         omniparser_client = OmniParserClient(base_url="http://192.168.1.28:7860")
         print(f"Sending image to OmniParser with box_threshold={box_threshold}, iou_threshold={iou_threshold}")
         result = await omniparser_client.process_image(
             image_data=image_data, box_threshold=box_threshold, iou_threshold=iou_threshold
         )
+        print(f"Received response from OmniParser: {result}")
         print(f"Received response from OmniParser: success={result.get('success', False)}")
 
         if result.get("success") and isinstance(result.get("data"), dict) and "image" in result["data"]:
@@ -55,7 +56,7 @@ async def _analyze_image_with_omniparser_core(
                 print(f"Decoding base64 image data (length: {len(base64_image_string)})")
                 image_bytes = base64.b64decode(base64_image_string)
                 print(f"Successfully decoded image data, size: {len(image_bytes)} bytes")
-                
+
                 # Construct output image path
                 base_name, ext = os.path.splitext(image_path)
                 # Use original extension if available, otherwise default to .png
@@ -70,11 +71,14 @@ async def _analyze_image_with_omniparser_core(
                 # as the textual data might still be valuable.
                 print(f"Error saving processed image: {img_save_error}")
                 import traceback
+
                 print(f"Detailed error: {traceback.format_exc()}")
         else:
             print(f"No image data found in response or response unsuccessful. Response keys: {result.keys()}")
-            if 'data' in result:
-                print(f"Data keys: {result['data'].keys() if isinstance(result['data'], dict) else 'data is not a dict'}")
+            if "data" in result:
+                print(
+                    f"Data keys: {result['data'].keys() if isinstance(result['data'], dict) else 'data is not a dict'}"
+                )
 
             # Remove the image from the result dictionary before returning
             del result["data"]["image"]
@@ -83,6 +87,7 @@ async def _analyze_image_with_omniparser_core(
     except Exception as e:
         print(f"Exception in analyze_image_with_omniparser: {e}")
         import traceback
+
         print(f"Detailed error: {traceback.format_exc()}")
         return {"success": False, "error": str(e)}
 
