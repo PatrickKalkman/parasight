@@ -60,9 +60,8 @@ async def _analyze_image_with_omniparser_core(
             base64_image_string = result["data"]["image"]
         else:
             base64_image_string = None
-            
-        if base64_image_string:
 
+        if base64_image_string:
             try:
                 print(f"Decoding base64 image data (length: {len(base64_image_string)})")
                 image_bytes = base64.b64decode(base64_image_string)
@@ -91,11 +90,9 @@ async def _analyze_image_with_omniparser_core(
                     f"Data keys: {result['data'].keys() if isinstance(result['data'], dict) else 'data is not a dict'}"
                 )
 
-        # Remove image data from result before returning
+        # Remove image data from result before returning to prevent sending large messages to the LLM
         if "image" in result:
             del result["image"]
-        elif "data" in result and isinstance(result["data"], dict) and "image" in result["data"]:
-            del result["data"]["image"]
 
         return result
     except Exception as e:
