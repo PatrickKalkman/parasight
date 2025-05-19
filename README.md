@@ -56,8 +56,8 @@ OmniParser is the vision system that powers Parasight. To set it up:
 
 ```bash
 # Pull and run the Docker image
-docker pull lladyd/omniparser:latest
-docker run -p 7860:7860 --gpus all lladyd/omniparser:latest
+docker pull savatar101/omniparse:0.1
+docker run -p 7860:7860 --gpus all savatar101/omniparse:0.1
 
 # Verify it's running
 curl http://localhost:7860/health
