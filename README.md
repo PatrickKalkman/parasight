@@ -3,7 +3,7 @@
 > _AI-Powered UI Testing That Adapts When Your UI Changes_
 
 > **Implementation Details:** For a deep dive into how we built this and the problems it solves, read our article:  
-> [Beyond Brittle: Building Resilient UI Testing with AI](https://medium.com/@pkalkman)
+> [Beyond Brittle: Building Resilient UI Testing with AI](https://ai.gopubby.com/beyond-brittle-building-resilient-ui-testing-9d66122580e9)
 
 ![Parasight Cover](cover.jpg)
 
