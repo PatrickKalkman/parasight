@@ -65,6 +65,12 @@ curl http://localhost:7860/health
 
 For detailed setup instructions and CPU-only options, see the [OmniParser Setup Guide](docs/omniparser_setup.md).
 
+## OmniParser Resources
+
+- [OmniParser API Repository](https://github.com/addy999/omniparser-api)
+- [OmniParser Docker Image](https://hub.docker.com/r/savatar101/omniparse)
+- [Microsoft OmniParser](https://github.com/microsoft/OmniParser)
+
 ## Usage
 
 ### Running the Prototype
