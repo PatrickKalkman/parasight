@@ -63,7 +63,7 @@ docker run -p 7860:7860 --gpus all savatar101/omniparse:0.1
 curl http://localhost:7860/health
 ```
 
-For detailed setup instructions and CPU-only options, see the [OmniParser Setup Guide](docs/omniparser_setup.md).
+For detailed setup instructions and CPU-only options, see the OmniParser resources listed below.
 
 ## OmniParser Resources
 
